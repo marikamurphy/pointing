@@ -4,6 +4,7 @@ project(point)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -11,10 +12,14 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   cv_bridge
+  tf
 )
 
 find_package(
-  OpenCv
+  OpenCV
+)
+find_package(
+  OpenPose REQUIRED
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,7 +112,7 @@ find_package(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+   INCLUDE_DIRS include
 #  LIBRARIES point
 #  CATKIN_DEPENDS roscpp std_msgs
 #  DEPENDS system_lib
@@ -120,9 +125,12 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  ${OpenPose_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -137,7 +145,11 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/subscribeToKinect.cpp)
+add_executable(${PROJECT_NAME}_node
+
+src/subscribeToKinect.cpp
+src/TFBroadcastPR.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +165,7 @@ add_executable(${PROJECT_NAME}_node src/subscribeToKinect.cpp)
  target_link_libraries(${PROJECT_NAME}_node
     ${OpenCV_LIBS}   
     ${catkin_LIBRARIES}
+    ${OpenPose_LIBS}
  )
 
 #############
