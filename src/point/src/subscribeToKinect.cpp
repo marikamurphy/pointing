@@ -31,6 +31,7 @@ private:
 
     sensor_msgs::Image image;
     cv::Mat depth_image;
+    bool depthhere = false;
 
 public:
     ros::Publisher marker_pub;
@@ -49,6 +50,7 @@ public:
     //figure out frustrum calculation... we need it to get the 3D point
     void depth_cb(const sensor_msgs::Image::ConstPtr &img) {
         depth_image = cv_bridge::toCvCopy(img, img->encoding)->image;
+        depthhere = true;
         //now we need to adjust points for camera calibration
 
         //before we do adjust: we gotta make sure this is not a bad point/ impossible depth
@@ -129,6 +131,8 @@ public:
 
 
     void showBodyKeypoints(const op::Array<float>& keyPoints) {
+        if (!depthhere)
+            return;
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
         points.header.stamp = ros::Time::now();
