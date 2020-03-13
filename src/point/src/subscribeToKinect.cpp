@@ -35,13 +35,11 @@ private:
     cv::Mat depth_image;
     cv::Mat color_image;
     //sensor_msgs::Image image;
+    op::Wrapper& opWrapper;
 
 public:
     ros::Publisher marker_pub;
-    SubscribeToKinect() : broadPRNavFix(ROOT_TRANSFORM, "offset_navfixed") {
-        
-
-    }
+    SubscribeToKinect(op::Wrapper& wrapper) : opWrapper(wrapper), broadPRNavFix(ROOT_TRANSFORM, "offset_navfixed") { }
 
     void masterCallback(const sensor_msgs::Image::ConstPtr &color, const sensor_msgs::Image::ConstPtr &depth) {
         ROS_INFO("OMG LOL");
@@ -77,37 +75,18 @@ public:
     // Adapted from https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/examples/tutorial_api_cpp/01_body_from_image_default.cpp
     // For getting key points from an image
     int getKeyPoints(const cv::Mat cvImageToProcess) {
-        try {
-            // opLog is like print?
-            // op::opLog("Printing key points: ", op::Priority::High);
-
-            op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
-            // Use single thread for debugging
-            if (FLAGS_disable_multi_thread) {
-                opWrapper.disableMultiThreading();
-            }
-            
-
-            op::WrapperStructPose wrapperStructPose{};
-            wrapperStructPose.modelFolder = op::String("openpose/models");
-           
-            opWrapper.configure(wrapperStructPose);
-            opWrapper.start();
-            // Instead of doing this, we need to pass in  the cv Mats we get in the subscriber
-            //const cv::Mat cvImageToProcess = cv::imread(FLAGS_image_path);
-            const op::Matrix imageToProcess = OP_CV2OPCONSTMAT(cvImageToProcess);
-            auto datumProcessed = opWrapper.emplaceAndPop(imageToProcess);
-            // Error checking datum processed
-            if (datumProcessed != nullptr) {
-                printKeypoints(datumProcessed);
-            } else {
-                op::opLog("Image could not be processed.", op::Priority::High);
-            }
-            return 0;
-        } catch (const std::exception& e) {
-            return -1;
+        // opLog is like print?
+        // op::opLog("Printing key points: ", op::Priority::High);
+        // Instead of doing this, we need to pass in  the cv Mats we get in the subscriber
+        //const cv::Mat cvImageToProcess = cv::imread(FLAGS_image_path);
+        const op::Matrix imageToProcess = OP_CV2OPCONSTMAT(cvImageToProcess);
+        auto datumProcessed = opWrapper.emplaceAndPop(imageToProcess);
+        // Error checking datum processed
+        if (datumProcessed != nullptr) {
+            printKeypoints(datumProcessed);
+        } else {
+            op::opLog("Image could not be processed.", op::Priority::High);
         }
-        
     }
 
     void printKeypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumPtr) {
@@ -141,7 +120,7 @@ public:
         // auto keyPoints = datumPtr->at(0)->poseKeypoints;
         // std::cout << "keypoints  is: " << typeid(keyPoints).name();
         // key
-        /*
+        
         std::vector<int> sizes = keyPoints.getSize();
 
         for (int i = 0; i < keyPoints.getSize(1); i++) {
@@ -156,7 +135,6 @@ public:
             }
         }
         marker_pub.publish(points);
-         */
     }
 
 
@@ -165,7 +143,33 @@ public:
 int main(int argc, char **argv) {
     ros::init(argc, argv, "point_node");
     ros::NodeHandle node;
-    SubscribeToKinect kSub;
+    op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
+
+    try {
+        // Use single thread for debugging
+        if (FLAGS_disable_multi_thread) {
+            opWrapper.disableMultiThreading();
+        }
+        
+
+        op::WrapperStructPose wrapperStructPose{};
+        wrapperStructPose.modelFolder = op::String("openpose/models");
+        
+        opWrapper.configure(wrapperStructPose);
+        opWrapper.start();
+        op::PoseModel& poseModel = wrapperStructPose.poseModel;
+        const auto& pbpmBody25 = getPoseBodyPartMapping(poseModel);
+
+        // std::cout << "get 3 (relbow?) " << pbpmBody25.at(3) << std::endl; 
+        // std::cout << "get 4 (rwrist?) " << pbpmBody25.at(4) << std::endl;
+        // std::cout << "pose model: " << static_cast<int>(poseModel) << std::endl;
+    } catch (const std::exception& e) {
+        return -1;
+    }
+
+
+    SubscribeToKinect kSub(opWrapper);
+
     message_filters::Subscriber<sensor_msgs::Image> depth_image_test(node, "/camera/depth/image", 10);
     message_filters::Subscriber<sensor_msgs::Image> image_test(node, "/camera/rgb/image_color", 10);
 
