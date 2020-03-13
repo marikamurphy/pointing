@@ -10,6 +10,10 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <visualization_msgs/Marker.h>
 #include <math.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/exact_time.h>
+#include <message_filters/sync_policies/approximate_time.h>
 
 #include "point/TFBroadcastPR.h"
 
@@ -28,40 +32,29 @@ private:
     } camCal;
 
     TFBroadcastPR broadPRNavFix; 
-
-    sensor_msgs::Image image;
     cv::Mat depth_image;
-    bool depthhere = false;
+    cv::Mat color_image;
+    //sensor_msgs::Image image;
 
 public:
     ros::Publisher marker_pub;
-    SubscribeToKinect() : broadPRNavFix(ROOT_TRANSFORM, "offset_navfixed") {}
-
-    // Call back to get rgb image
-    void imageCb(const sensor_msgs::Image::ConstPtr &msg) {
-        cv_bridge::CvImagePtr cv_ptr = 
-            cv_bridge::toCvCopy(msg, msg->encoding);
-        cv::Mat cvImageToProcess = cv_ptr->image; //const or not?
-        //now we run openpose on it
-        getKeyPoints(cvImageToProcess);
-    } 
-
-    // Call back to get depth image... depth map easier, faster, better
-    //figure out frustrum calculation... we need it to get the 3D point
-    void depth_cb(const sensor_msgs::Image::ConstPtr &img) {
-        depth_image = cv_bridge::toCvCopy(img, img->encoding)->image;
-        depthhere = true;
-        //now we need to adjust points for camera calibration
-
-        //before we do adjust: we gotta make sure this is not a bad point/ impossible depth
-        //we need to figure out if this is a bad point... how ?  
+    SubscribeToKinect() : broadPRNavFix(ROOT_TRANSFORM, "offset_navfixed") {
         
-        //float depth_val = cv_depth_image.at<float>(y, x);
-        //if (isnan(depth_val) || depth_val <= 0.001)
-        //{
-            //depth_val = prevDepthVal;
-        //}
+
     }
+
+    void masterCallback(const sensor_msgs::Image::ConstPtr &color, const sensor_msgs::Image::ConstPtr &depth) {
+        ROS_INFO("OMG LOL");
+        // depth image stuff
+        depth_image = cv_bridge::toCvCopy(depth, depth->encoding)->image;
+        color_image = cv_bridge::toCvCopy(color, color->encoding)->image;
+
+        //cv::imshow("1", depth_image);
+        //cv::imshow("2", color_image);
+        //cv::waitKey(1);
+        //now we run openpose on it
+        getKeyPoints(color_image);
+    } 
 
     //adjust a x, y, depth point to reflect the camera calibration
     geometry_msgs::Point transformPoint(int x, int y, float depth_val){
@@ -131,8 +124,6 @@ public:
 
 
     void showBodyKeypoints(const op::Array<float>& keyPoints) {
-        if (!depthhere)
-            return;
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
         points.header.stamp = ros::Time::now();
@@ -150,7 +141,7 @@ public:
         // auto keyPoints = datumPtr->at(0)->poseKeypoints;
         // std::cout << "keypoints  is: " << typeid(keyPoints).name();
         // key
-
+        /*
         std::vector<int> sizes = keyPoints.getSize();
 
         for (int i = 0; i < keyPoints.getSize(1); i++) {
@@ -165,19 +156,25 @@ public:
             }
         }
         marker_pub.publish(points);
+         */
     }
 
-    
+
 };
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "mapping_marker");
+    ros::init(argc, argv, "point_node");
     ros::NodeHandle node;
     SubscribeToKinect kSub;
-    ros::Subscriber depth_image_test = node.subscribe("/camera/depth/image"
-        , 10, &SubscribeToKinect::depth_cb, &kSub);
-    ros::Subscriber image_test = node.subscribe("/camera/rgb/image_color"
-       , 10, &SubscribeToKinect::imageCb, &kSub);
+    message_filters::Subscriber<sensor_msgs::Image> depth_image_test(node, "/camera/depth/image", 10);
+    message_filters::Subscriber<sensor_msgs::Image> image_test(node, "/camera/rgb/image_color", 10);
+
+    //message_filters::Subscriber ptCloud(node, "camera/depth/points", 10);
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
+
+    message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), image_test, depth_image_test);
+    sync.registerCallback(boost::bind(&SubscribeToKinect::masterCallback, &kSub, _1, _2));
+
     ros::Subscriber cam_intrinsic_params = node.subscribe("/camera/depth_registered/sw_registered/camera_info",
         10, &SubscribeToKinect::cameraInfoCallback, &kSub);
     //ros::Subscriber ptCloud = node.subscribe("camera/depth/points",
