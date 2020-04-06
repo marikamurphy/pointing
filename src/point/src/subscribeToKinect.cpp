@@ -123,17 +123,18 @@ public:
         
         std::vector<int> sizes = keyPoints.getSize();
 
-        for (int i = 0; i < keyPoints.getSize(1); i++) {
-            std::vector<int> xIndex{0, i, 0};
-            std::vector<int> yIndex{0, i, 1};
-            float rawX = keyPoints.at(xIndex);
-            float rawY = keyPoints.at(yIndex); 
-            float rawZ = depth_image.at<float>(rawY, rawX);
-            if (!(std::isnan(rawZ) || rawZ <= 0.001)) {
-                geometry_msgs::Point p = transformPoint(rawX, rawY, rawZ);
-                points.points.push_back(p);
+        if (keyPoints.getSize(0))
+            for (int i = 3; i < 5; i++) {
+                std::vector<int> xIndex{0, i, 0};
+                std::vector<int> yIndex{0, i, 1};
+                float rawX = keyPoints.at(xIndex);
+                float rawY = keyPoints.at(yIndex); 
+                float rawZ = depth_image.at<float>(rawY, rawX);
+                if (!(std::isnan(rawZ) || rawZ <= 0.001)) {
+                    geometry_msgs::Point p = transformPoint(rawX, rawY, rawZ);
+                    points.points.push_back(p);
+                }
             }
-        }
         marker_pub.publish(points);
     }
 
