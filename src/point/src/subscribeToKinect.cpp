@@ -101,29 +101,46 @@ public:
         }
     }
 
-
     void showBodyKeypoints(const op::Array<float>& keyPoints) {
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
         points.header.stamp = ros::Time::now();
         points.ns = "points_and_lines";
         points.action = visualization_msgs::Marker::ADD;
-        points.pose.orientation.w = 1.0;
-        points.type = visualization_msgs::Marker::POINTS;
-        points.scale.x = 0.05;
-        points.scale.y = 0.05;
-        points.id = 0;
-        points.color.r = 1.0f;
+        points.pose.orientation.w = 1.0;     
         points.color.a = 1.0;
 
+        for (const geometry_msgs::Point& p : findEndPoints(keyPoints))
+            points.points.push_back(p);
+
+        visualization_msgs::Marker line_list(points);
+
+        points.color.g = 1.0;
+        line_list.color.r = 1.0;
+
+        points.scale.x = 0.2;
+        points.scale.y = 0.2;
+        line_list.scale.x = 0.1;
+
+        points.id = 0;
+        line_list.id = 1;
+
+        points.type = visualization_msgs::Marker::POINTS;
+        line_list.type = visualization_msgs::Marker::LINE_LIST;
 
         // auto keyPoints = datumPtr->at(0)->poseKeypoints;
         // std::cout << "keypoints  is: " << typeid(keyPoints).name();
         // key
         
-        std::vector<int> sizes = keyPoints.getSize();
 
-        if (keyPoints.getSize(0))
+        marker_pub.publish(points);
+        marker_pub.publish(line_list);
+    }
+
+    std::vector<geometry_msgs::Point> findEndPoints(const op::Array<float>& keyPoints) {
+        visualization_msgs::Marker points;
+        std::vector<geometry_msgs::Point> ret;
+          if (keyPoints.getSize(0))
             for (int i = 3; i < 5; i++) {
                 std::vector<int> xIndex{0, i, 0};
                 std::vector<int> yIndex{0, i, 1};
@@ -132,13 +149,12 @@ public:
                 float rawZ = depth_image.at<float>(rawY, rawX);
                 if (!(std::isnan(rawZ) || rawZ <= 0.001)) {
                     geometry_msgs::Point p = transformPoint(rawX, rawY, rawZ);
-                    points.points.push_back(p);
+                    std::cout << "x: " << p.x << " y: " << p.y << " z: " << p.z << std::endl;
+                    ret.push_back(p);
                 }
             }
-        marker_pub.publish(points);
+        return ret;
     }
-
-
 };
 
 int main(int argc, char **argv) {
