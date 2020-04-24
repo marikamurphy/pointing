@@ -14,6 +14,7 @@ ros
 * roslaunch freenect_launch freenect.launch
 * rosrun rviz rviz
 * rosrun point_node <file name>
+* rosbag play -l pointing.bag
 
 * https://github.com/stevenjj/openpose_ros
 * 

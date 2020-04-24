@@ -140,21 +140,109 @@ public:
     std::vector<geometry_msgs::Point> findEndPoints(const op::Array<float>& keyPoints) {
         visualization_msgs::Marker points;
         std::vector<geometry_msgs::Point> ret;
-          if (keyPoints.getSize(0))
+        if (keyPoints.getSize(0)){
             for (int i = 3; i < 5; i++) {
                 std::vector<int> xIndex{0, i, 0};
                 std::vector<int> yIndex{0, i, 1};
-                float rawX = keyPoints.at(xIndex);
-                float rawY = keyPoints.at(yIndex); 
+                std::cout << "Set up indicies" << std::endl;
+                float rawX = keyPoints.at({0, 3, 0});
+                std::cout << "Read in rawX." << std::endl;
+                float rawY = keyPoints.at(yIndex);
+                std::cout << "Read in rawY." << std::endl;
+                if (std::isnan(rawX) || std::isnan(rawY)) {
+                    return ret;
+                } 
                 float rawZ = depth_image.at<float>(rawY, rawX);
                 if (!(std::isnan(rawZ) || rawZ <= 0.001)) {
                     geometry_msgs::Point p = transformPoint(rawX, rawY, rawZ);
                     std::cout << "x: " << p.x << " y: " << p.y << " z: " << p.z << std::endl;
                     ret.push_back(p);
+                    
                 }
             }
+        }
+        if (ret.size() >= 2) {
+            // TODO Heuristic to determine how much to scale by?
+            extendPoint(ret, 5);
+        }
+        
         return ret;
     }
+
+    std::vector<geometry_msgs::Point> extendPoint (std::vector<geometry_msgs::Point> origin, int scalar) {
+        geometry_msgs::Point vec;
+        // Create vector
+        vec.x = origin[1].x - origin[0].x;
+        vec.y = origin[1].y - origin[0].y;
+        vec.z = origin[1].z - origin[0].z;
+        // Extend vector
+        geometry_msgs::Point end_vec;
+        end_vec.x = vec.x * scalar;
+        end_vec.y = vec.y * scalar;
+        end_vec.z = vec.z * scalar;
+        std::vector<geometry_msgs::Point> ret;
+        // Create end point
+        geometry_msgs::Point end_pt;
+        end_pt.x = origin[0].x + end_vec.x;
+        end_pt.y = origin[0].y + end_vec.y;
+        end_pt.z = origin[0].z + end_vec.z;
+        ret.push_back(origin[0]);
+        ret.push_back(end_pt);
+        printPoints(ret);
+        return ret;
+    }
+
+    void printPoints (std::vector<geometry_msgs::Point> pts) {
+        visualization_msgs::Marker points;
+        points.header.frame_id = ROOT_TRANSFORM;
+        points.header.stamp = ros::Time::now();
+        points.ns = "points_and_lines";
+        points.action = visualization_msgs::Marker::ADD;
+        points.pose.orientation.w = 1.0;     
+        points.color.a = 1.0;
+
+        points.points.push_back(pts[0]);
+        points.points.push_back(pts[1]);
+
+
+        points.color.g = 1.0;
+
+        points.scale.x = 0.2;
+        points.scale.y = 0.2;
+
+        points.id = 0;
+
+        points.type = visualization_msgs::Marker::POINTS;
+        marker_pub.publish(points);
+    }
+/*
+    void bresenham (std::vector<geometry_msgs::Point> line) {
+        std::vector<geometry_msg::Point> grid_line;
+        float x1 = line[0].x;
+        float y1 = line[0].y;
+        float x2 = line[1].x;
+        float y2 = line[1].y;
+
+        float m_new = 2 * (y2 - y1); 
+        float slope_error_new = m_new - (x2 - x1); 
+        for (float x = x1, y = y1; x <= x2; x++) 
+        { 
+            grid_line.push_back();
+            cout << "(" << x << "," << y << ")\n"; 
+        
+            // Add slope to increment angle formed 
+            slope_error_new += m_new; 
+        
+            // Slope error reached limit, time to 
+            // increment y and update slope error. 
+            if (slope_error_new >= 0) 
+            { 
+                y++; 
+                slope_error_new  -= 2 * (x2 - x1); 
+            } 
+        } 
+    }
+    */
 };
 
 int main(int argc, char **argv) {
