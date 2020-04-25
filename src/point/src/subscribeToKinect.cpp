@@ -246,7 +246,7 @@ public:
 };
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "point_node");
+ ros::init(argc, argv, "point_node");
     ros::NodeHandle node;
     op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
 
@@ -296,4 +296,5 @@ int main(int argc, char **argv) {
     // Run openposes on the cv mats
 
     return 0;
+
 }

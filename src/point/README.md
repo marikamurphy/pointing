@@ -4,6 +4,7 @@ openpose
 ros
 
 **Helpful commands**
+*Do catkin build in the pointing workspace, not in point.  OpenPose will break*
 
 * source devel/setup.bash
 * roscore
