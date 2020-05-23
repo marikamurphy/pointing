@@ -17,7 +17,6 @@
 
 #include "point/TFBroadcastPR.h"
 
-
 #define ROOT_TRANSFORM "camera_rgb_optical_frame"
 
 class SubscribeToKinect {
@@ -137,6 +136,7 @@ public:
         marker_pub.publish(line_list);
     }
 
+    // Locate limb positions? 
     std::vector<geometry_msgs::Point> findEndPoints(const op::Array<float>& keyPoints) {
         visualization_msgs::Marker points;
         std::vector<geometry_msgs::Point> ret;
@@ -169,6 +169,7 @@ public:
         return ret;
     }
 
+    // Find what's being pointed at out in space
     std::vector<geometry_msgs::Point> extendPoint (std::vector<geometry_msgs::Point> origin, int scalar) {
         geometry_msgs::Point vec;
         // Create vector
@@ -191,7 +192,8 @@ public:
         printPoints(ret);
         return ret;
     }
-
+    
+    // Show the two points on the point vector
     void printPoints (std::vector<geometry_msgs::Point> pts) {
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
@@ -215,7 +217,12 @@ public:
         points.type = visualization_msgs::Marker::POINTS;
         marker_pub.publish(points);
     }
-/*
+
+    void searchLine() {
+      // Go along line
+      
+    }
+
     void bresenham (std::vector<geometry_msgs::Point> line) {
         std::vector<geometry_msg::Point> grid_line;
         float x1 = line[0].x;
@@ -242,8 +249,8 @@ public:
             } 
         } 
     }
-    */
 };
+
 
 int main(int argc, char **argv) {
  ros::init(argc, argv, "point_node");
