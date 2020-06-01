@@ -1,7 +1,15 @@
 import torchvision as Tv
+#hacky soln, TODO:figure out pyenv next
+ros_path = '/opt/ros/kinetic/lib/python2.7/dist-packages'
+if ros_path in sys.path:
+    sys.path.remove()
 import cv2
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
+
 import matplotlib.pyplot as plt
 from PIL import Image
+
+#TODO: run on the GPU
 
 def get_prediction(img_path, threshold):
       img = Image.open(img_path) # Load the image
@@ -25,13 +33,14 @@ def object_detection_api(img_path, threshold=0.5, rect_th=3, text_size=3, text_t
       for i in range(len(boxes)):
             cv2.rectangle(img, boxes[i][0], boxes[i][1],color=(0, 255, 0), thickness=rect_th) # Draw Rectangle with the coordinates
             cv2.putText(img,pred_cls[i], boxes[i][0],  cv2.FONT_HERSHEY_SIMPLEX, text_size, (0,255,0),thickness=text_th) # Write the prediction class
+      #TODO: return the image with the rectangles to compare with line
       plt.figure(figsize=(20,30)) # display the output image
       plt.imshow(img)
       plt.xticks([])
       plt.yticks([])
       plt.show()
 
-
+# torch.cuda.is_available();
 model = Tv.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 model.eval()
 COCO_INSTANCE_CATEGORY_NAMES = [
