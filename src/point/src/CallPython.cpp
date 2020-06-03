@@ -18,17 +18,18 @@ void execute(){
     PyObject *pArgs, *pPhoto, *pThreshold;
 
     Py_Initialize();
+    /* 
     PyRun_SimpleString("import sys");
     PyRun_SimpleString("sys.path.append(\".\")");
     pName = PyUnicode_DecodeFSDefault(_file_name);
-    /* Error checking of pName left out */
-
+    // Error checking of pName left out 
+     
     pModule = PyImport_Import(pName);
     Py_DECREF(pName);
 
     if (pModule != NULL) {
         pFunc = PyObject_GetAttrString(pModule, _function);
-        /* pFunc is a new reference */
+        // pFunc is a new reference 
 
         if (pFunc && PyCallable_Check(pFunc)) {
             //Get the arguments photo path and threshold
@@ -39,7 +40,7 @@ void execute(){
                 Py_DECREF(pModule);
                 fprintf(stderr, "Cannot convert photo file path\n");
             }
-            /* pValue reference stolen here: */
+            // pValue reference stolen here: 
             PyTuple_SetItem(pArgs, 0, pPhoto);
             pThreshold = PyLong_FromLong(atoi(_threshold));
             if (!pPhoto) {
@@ -47,7 +48,7 @@ void execute(){
                 Py_DECREF(pModule);
                 fprintf(stderr, "Cannot convert photo file path\n");
             }
-            /* pValue reference stolen here: */
+            // pValue reference stolen here: 
             PyTuple_SetItem(pArgs, 1, pThreshold);
             //try to execute
             pValue = PyObject_CallObject(pFunc, pArgs);
@@ -76,6 +77,7 @@ void execute(){
         PyErr_Print();
         fprintf(stderr, "Failed to load \"%s\"\n", _file_name);
     }
+    */
     Py_Finalize(); // errors during finalization ignored
 
 } 

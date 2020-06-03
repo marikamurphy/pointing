@@ -10,6 +10,8 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <visualization_msgs/Marker.h>
 #include <math.h>
+
+#include "tf2_ros/message_filter.h"//do we need?
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/exact_time.h>
@@ -224,7 +226,7 @@ public:
     }
 
     void bresenham (std::vector<geometry_msgs::Point> line) {
-        std::vector<geometry_msg::Point> grid_line;
+        std::vector<geometry_msgs::Point> grid_line;
         float x1 = line[0].x;
         float y1 = line[0].y;
         float x2 = line[1].x;
@@ -234,8 +236,8 @@ public:
         float slope_error_new = m_new - (x2 - x1); 
         for (float x = x1, y = y1; x <= x2; x++) 
         { 
-            grid_line.push_back();
-            cout << "(" << x << "," << y << ")\n"; 
+            //grid_line.push_back(); //TODO*****
+            std::cout << "(" << x << "," << y << ")\n"; 
         
             // Add slope to increment angle formed 
             slope_error_new += m_new; 

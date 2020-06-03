@@ -5,6 +5,7 @@ project(point)
 #add_compile_options(-std=c++11 -g)
 add_compile_options(-std=c++11)
 
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,7 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   cv_bridge
-  tf
+  tf2
+  tf2_ros
 )
 
 find_package(
@@ -22,6 +24,7 @@ find_package(
 find_package(
   OpenPose REQUIRED
 )
+#find_package (PythonLibs 3.5 EXACT REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -130,6 +133,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenPose_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  #${PYTHON_INCLUDE_DIRS}
 )
 
 
@@ -150,6 +154,7 @@ add_executable(${PROJECT_NAME}_node
 
 src/subscribeToKinect.cpp
 src/TFBroadcastPR.cpp
+#src/CallPython.cpp
 )
 
 ## Rename C++ executable without prefix
@@ -167,7 +172,9 @@ src/TFBroadcastPR.cpp
     ${OpenCV_LIBS}   
     ${catkin_LIBRARIES}
     ${OpenPose_LIBS}
+    #${PYTHON_LIBRARIES}
  )
+
 
 #############
 ## Install ##
