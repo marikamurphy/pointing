@@ -138,7 +138,7 @@ public:
         marker_pub.publish(line_list);
     }
 
-    // Locate limb positions? 
+    // Locate limb positions 
     std::vector<geometry_msgs::Point> findEndPoints(const op::Array<float>& keyPoints) {
         visualization_msgs::Marker points;
         std::vector<geometry_msgs::Point> ret;
@@ -225,8 +225,14 @@ public:
       
     }
 
-    void bresenham (std::vector<geometry_msgs::Point> line) {
+    //TODO: document
+    std::vector<geometry_msgs::Point> bresenham (std::vector<geometry_msgs::Point> line) {
+        // Make sure we have 2 valid points
         std::vector<geometry_msgs::Point> grid_line;
+        if (line.size() < 2 )  {
+            return grid_line;
+        }
+        
         float x1 = line[0].x;
         float y1 = line[0].y;
         float x2 = line[1].x;
@@ -236,8 +242,11 @@ public:
         float slope_error_new = m_new - (x2 - x1); 
         for (float x = x1, y = y1; x <= x2; x++) 
         { 
-            //grid_line.push_back(); //TODO*****
-            std::cout << "(" << x << "," << y << ")\n"; 
+            geometry_msgs::Point cor;
+            cor.x = x;
+            cor.y = y;
+            grid_line.push_back(cor);
+            // cout << "(" << x << "," << y << ")\n"; 
         
             // Add slope to increment angle formed 
             slope_error_new += m_new; 
@@ -250,7 +259,65 @@ public:
                 slope_error_new  -= 2 * (x2 - x1); 
             } 
         } 
+        return grid_line;
     }
+
+    /*
+     * Magnitude of a vector
+     */
+    float magnitude(const float *vec, int n) {
+        float total = 0.0;
+        for (int i = 0; i < n; i++)
+    	total += vec[i] * vec[i];
+        return sqrt(total);
+    }
+    
+    /*
+     * Stores the cross product of v1 and v2 in output
+     * Strictly must be defined for vectors of size 3, so we don't need a size
+     * 
+     * Definition of cross product is overly complicated, but this is used
+     * in the calculation later for distance from a point to a line
+     *
+     * This can be understood as a simplification of the formula:
+     * | i	   j     k     |
+     * | v1[0] v1[1] v1[2] |
+     * | v2[0] v2[1] v2[2] |
+     * where you are taking the determinant of that matrix and
+     * i,j,k are the orthonormal element vectors
+     */
+    void crossProduct(const float v1[3], const float v2[3], float output[3]) {
+    	output[0] = v1[1] * v2[2] - v1[2] * v2[1];
+    	output[1] = v1[2] * v2[0] - v1[0] * v2[2];
+    	output[3] = v1[0] * v2[1] - v1[1] * v2[0];
+    }
+    
+    
+    /*
+     * As per http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+     * This solves for the minimum distance from pt (an <x,y,z> vector) to the
+     * vector formed between points v1 and v2
+     *
+     * We can use this to test the distance from each point along our 2d line
+     * to the gesture created by the point
+     */    
+    float pointLineDistance3d(const float v1[3], const float v2[3], const float pt[3]) {
+    	float den[3];    // Denominator vector: v2 - v1
+    	float d1[3];     // Numerator left half: pt - v1
+    	float d2[3];     // Numerator right half: pt - v2
+    	float cross[3];  // Numerator vector: d1 x d2
+    	// Set up vectors
+    	for (int i = 0; i < 3; i++) {
+    	    den[i] = v2[i] - v1[i];
+    	    d1[i] = pt[i] - v1[i];
+    	    d2[i] = pt[i] - v2[i];
+    	}
+    	crossProduct(d1, d2, cross);
+
+    	// Return calculation
+    	return magnitude(cross, 3) / magnitude(den, 3);
+    }
+	
 };
 
 
