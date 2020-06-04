@@ -222,7 +222,9 @@ public:
         marker_pub.publish(points);
     }
 
-    void searchLine() {
+    // check if pixels w/in certain area from the line intersect
+    // with the bounding box of an object
+    void searchLine(std::vector<geometry_msgs::Point> line) {
       // Go along line
       // Find size of image and make sure we don't go outside it
       // Iterate through the grid_line returned from bresenham
@@ -232,6 +234,32 @@ public:
       // Search around the bresenham line
       // -we could do that in the bresenham method (add to grid_line)
       // -or create a separate method?
+      std::vector<geometry_msgs::Point> grid_line;
+      grid_line = bresenham(line);
+      int i;
+      int search_area = 20; //num pixels above/ below line to search
+      for(int i = 0; i < grid_line.size(); i++){
+          float x = grid_line[i].x;
+          float y = grid_line[i].y;
+          //check above the line
+          if(withinImage(x, y+search_area)) 
+            objectIntersection(x, y+search_area);
+          //check below the line
+          if(withinImage(x, y-search_area))
+            objectIntersection(x, y-search_area);
+      }
+
+    }
+    //check if x,y is valid pixel within coordinates of the image
+    bool withinImage(float x, float y){
+       if(x > -1 && x < color_image.rows && y > -1 && y < color_image.cols)
+            return true;
+        return false; 
+    }
+    //check if given pixel lies within bounding box of an object
+    //TODO: return which object
+    void objectIntersection(float x, float y){
+
     }
 
     //get the coordinates of the pixels that need to be searched
