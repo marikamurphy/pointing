@@ -90,6 +90,7 @@ public:
         }
     }
 
+    //extract points from datumPtr
     void printKeypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumPtr) {
         try {
             if (datumPtr != nullptr && !datumPtr->empty()) {
@@ -102,6 +103,7 @@ public:
         }
     }
 
+    //this can be used to publish all of the openpose keypoints in keypoints
     void showBodyKeypoints(const op::Array<float>& keyPoints) {
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
@@ -222,10 +224,17 @@ public:
 
     void searchLine() {
       // Go along line
-      
+      // Find size of image and make sure we don't go outside it
+      // Iterate through the grid_line returned from bresenham
+      // Show extened line on the imshow viewer
+      // Think of ways to detect ghosting
+      // Find the depth of a x, y cordinate
+      // Search around the bresenham line
+      // -we could do that in the bresenham method (add to grid_line)
+      // -or create a separate method?
     }
 
-    //TODO: document
+    //get the coordinates of the pixels that need to be searched
     std::vector<geometry_msgs::Point> bresenham (std::vector<geometry_msgs::Point> line) {
         // Make sure we have 2 valid points
         std::vector<geometry_msgs::Point> grid_line;
