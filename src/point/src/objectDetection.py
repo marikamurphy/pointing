@@ -1,10 +1,12 @@
+# !/usr/bin/env python3
+
 import torchvision as Tv
 #hacky soln, TODO:figure out pyenv next
-ros_path = '/opt/ros/kinetic/lib/python2.7/dist-packages'
-if ros_path in sys.path:
-    sys.path.remove()
+#ros_path = '/opt/ros/kinetic/lib/python2.7/dist-packages'
+#if ros_path in sys.path:
+#    sys.path.remove()
 import cv2
-sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
+#sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -57,5 +59,5 @@ COCO_INSTANCE_CATEGORY_NAMES = [
                                                     'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',
                                                         'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
                                                         ]
-object_detection_api('./burger.png', threshold=0.8)
+object_detection_api('./donut.png', threshold=0.8)
 print("Done")

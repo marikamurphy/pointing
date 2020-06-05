@@ -3,7 +3,7 @@
 //#include <opencv2/opencv.cpp> //do we need this?
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <openpose/flags.hpp>
+//#include <openpose/flags.hpp>
 #include <openpose/headers.hpp> //Openpose dependencies
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/CameraInfo.h>
@@ -18,6 +18,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 
 #include "point/TFBroadcastPR.h"
+#include "point/CallPython.h"
 
 #define ROOT_TRANSFORM "camera_rgb_optical_frame"
 
@@ -361,13 +362,17 @@ public:
 int main(int argc, char **argv) {
  ros::init(argc, argv, "point_node");
     ros::NodeHandle node;
-    op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
+    char *file_name = "";
+    char *function = "";
+    char *photo_path = "";
+    CallPython objdetection(file_name,function,photo_path,0.8);
+    /* op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
 
     try {
         // Use single thread for debugging
-        if (FLAGS_disable_multi_thread) {
-            opWrapper.disableMultiThreading();
-        }
+        //if (FLAGS_disable_multi_thread) {
+        //    opWrapper.disableMultiThreading();
+        //} //only use if openpose build with flags enabled
         
 
         op::WrapperStructPose wrapperStructPose{};
@@ -402,6 +407,7 @@ int main(int argc, char **argv) {
     //ros::Subscriber ptCloud = node.subscribe("camera/depth/points",
      //   10, &SubscribeToKinect::printPtCloud, &kSub);
     kSub.marker_pub = node.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+    */
     std::cout<<"running"<<std::endl;
     ros::spin();
     std::cout<<"running"<<std::endl;

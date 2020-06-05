@@ -13,7 +13,7 @@ class CallPython {
         char *_photo_path;
         float _threshold;
 
-}
+};
 
 
 

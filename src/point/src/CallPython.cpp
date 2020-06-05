@@ -3,7 +3,7 @@
 
 //construct an object to call objectDetection
 //TODO? we could try to generalize if we need to call another python file
-CallPython(char *file_name, char *function, char *photo_path, float threshold){
+CallPython::CallPython(char *file_name, char *function, char *photo_path, float threshold){
     _file_name = file_name;
     _function = function;
     _photo_path = photo_path;
@@ -13,14 +13,15 @@ CallPython(char *file_name, char *function, char *photo_path, float threshold){
 
 //execute the python module
 //TODO: return the image with rectangles
-void execute(){
+void CallPython::execute(){
+     
     PyObject *pName, *pModule, *pFunc;
-    PyObject *pArgs, *pPhoto, *pThreshold;
-
+    PyObject *pArgs, *pPhoto, *pThreshold, *pValue;
+   
     Py_Initialize();
-    /* 
-    PyRun_SimpleString("import sys");
-    PyRun_SimpleString("sys.path.append(\".\")");
+      
+    //PyRun_SimpleString("import sys");
+    //PyRun_SimpleString("sys.path.append(\".\")");
     pName = PyUnicode_DecodeFSDefault(_file_name);
     // Error checking of pName left out 
      
@@ -42,11 +43,11 @@ void execute(){
             }
             // pValue reference stolen here: 
             PyTuple_SetItem(pArgs, 0, pPhoto);
-            pThreshold = PyLong_FromLong(atoi(_threshold));
+            pThreshold = PyLong_FromLong(_threshold);
             if (!pPhoto) {
                 Py_DECREF(pArgs);
                 Py_DECREF(pModule);
-                fprintf(stderr, "Cannot convert photo file path\n");
+                fprintf(stderr, "Cannot convert threshold\n");
             }
             // pValue reference stolen here: 
             PyTuple_SetItem(pArgs, 1, pThreshold);
@@ -77,7 +78,7 @@ void execute(){
         PyErr_Print();
         fprintf(stderr, "Failed to load \"%s\"\n", _file_name);
     }
-    */
+    
     Py_Finalize(); // errors during finalization ignored
 
 } 

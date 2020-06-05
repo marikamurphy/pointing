@@ -17,6 +17,11 @@ ros
 * rosrun point_node <file name>
 * rosbag play -l pointing.bag
 
+* for python/pytorch: source pointing-env/bin/activate
+* deactivate (leave virtual env)
+* catkin config -DPYTHON_EXECUTABLE=/home/users/mmurphy/pointing-env/bin/python3 (your path to venv)
+* then to save this: 1) mkdir install 2) catkin config --install
+
 * https://github.com/stevenjj/openpose_ros
 * 
 

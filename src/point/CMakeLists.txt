@@ -5,6 +5,9 @@ project(point)
 #add_compile_options(-std=c++11 -g)
 add_compile_options(-std=c++11)
 
+set(OpenPose_DIR /home/users/mmurphy/openpose)
+set(OpenPose_INCLUDE_DIRS ${OpenPose_DIR}/include)
+set(OpenPose_LINK_LIBRARY ${OpenPose_DIR}/build/src/openpose/libopenpose.so)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 ## Find catkin macros and libraries
@@ -21,10 +24,10 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(
   OpenCV
 )
-find_package(
-  OpenPose REQUIRED
-)
-#find_package (PythonLibs 3.5 EXACT REQUIRED)
+#find_package(
+  #OpenPose REQUIRED
+#)
+find_package(PythonLibs 3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -117,7 +120,7 @@ find_package(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES point
+   LIBRARIES point
 #  CATKIN_DEPENDS roscpp std_msgs
 #  DEPENDS system_lib
 )
@@ -128,12 +131,13 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${OpenPose_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-  #${PYTHON_INCLUDE_DIRS}
+  ${PYTHON_INCLUDE_DIRS}
 )
 
 
@@ -154,7 +158,7 @@ add_executable(${PROJECT_NAME}_node
 
 src/subscribeToKinect.cpp
 src/TFBroadcastPR.cpp
-#src/CallPython.cpp
+src/CallPython.cpp
 )
 
 ## Rename C++ executable without prefix
@@ -168,11 +172,12 @@ src/TFBroadcastPR.cpp
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
+
  target_link_libraries(${PROJECT_NAME}_node
     ${OpenCV_LIBS}   
     ${catkin_LIBRARIES}
-    ${OpenPose_LIBS}
-    #${PYTHON_LIBRARIES}
+    ${OpenPose_LINK_LIBRARY}
+    ${PYTHON_LIBRARIES}
  )
 
 
