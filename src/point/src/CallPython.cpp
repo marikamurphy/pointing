@@ -1,5 +1,8 @@
 #include "point/CallPython.h"
 #include <Python.h>
+#include <boost/filesystem.hpp>
+#include <iostream>
+#include <string>
 
 //construct an object to call objectDetection
 //TODO? we could try to generalize if we need to call another python file
@@ -19,14 +22,22 @@ void CallPython::execute(){
     PyObject *pArgs, *pPhoto, *pThreshold, *pValue;
    
     Py_Initialize();
-      
-    //PyRun_SimpleString("import sys");
-    //PyRun_SimpleString("sys.path.append(\".\")");
-    pName = PyUnicode_DecodeFSDefault(_file_name);
+    //we need to get the path for the python file
+    std::string abspath = "sys.path.append(\""+ boost::filesystem::current_path().string() + "/point/src\")";
+    PyRun_SimpleString("import sys");
+    PyRun_SimpleString(abspath.c_str());
+    std::cout <<boost::filesystem::current_path().c_str() << std::endl;
+    //pName = PyUnicode_DecodeFSDefault(_file_name);
+    pName = PyString_FromString(_file_name);
     // Error checking of pName left out 
      
     pModule = PyImport_Import(pName);
     Py_DECREF(pName);
+    if (pModule == NULL)
+    {
+        PyErr_Print();
+        std::exit(1);
+    }
 
     if (pModule != NULL) {
         pFunc = PyObject_GetAttrString(pModule, _function);
@@ -44,7 +55,7 @@ void CallPython::execute(){
             // pValue reference stolen here: 
             PyTuple_SetItem(pArgs, 0, pPhoto);
             pThreshold = PyLong_FromLong(_threshold);
-            if (!pPhoto) {
+            if (!pThreshold) {
                 Py_DECREF(pArgs);
                 Py_DECREF(pModule);
                 fprintf(stderr, "Cannot convert threshold\n");

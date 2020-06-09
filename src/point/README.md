@@ -19,8 +19,7 @@ ros
 
 * for python/pytorch: source pointing-env/bin/activate
 * deactivate (leave virtual env)
-* catkin config -DPYTHON_EXECUTABLE=/home/users/mmurphy/pointing-env/bin/python3 (your path to venv)
-* then to save this: 1) mkdir install 2) catkin config --install
+* to run server for pytorch type python server.py
 
 * https://github.com/stevenjj/openpose_ros
 * 
