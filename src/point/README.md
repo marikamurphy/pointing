@@ -21,6 +21,12 @@ ros
 * deactivate (leave virtual env)
 * to run server for pytorch type python server.py
 
+* For the simulation in gazebo: 
+* roslaunch gazebo_ros empty_world.launch
+* rosrun gazebo_ros spawn_model -file `rospack find hsr_description`/robots/hsrb4s.urdf -urdf -model MYROBOT
+* todo: make launch file for hsr in gazebo
+* For the simulation in rviz: roslaunch hsr_description display.launch
+
 * https://github.com/stevenjj/openpose_ros
 * 
 
