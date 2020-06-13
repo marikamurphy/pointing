@@ -1,0 +1,15 @@
+<launch>
+  <include file="$(find hsr_gazebo)/launch/hsr.launch" />
+
+  <rosparam command="load" file="$(find hsr_control)/config/hsr_control.yaml" />
+
+  <node pkg="controller_manager" type="spawner" name="spawner" output="screen"
+        args="joint_state_controller whole_body_controller --shutdown-timeout 0.5" />
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" />
+
+  <node pkg="tf2_ros" type="buffer_server" name="tf2_buffer_server" />
+
+  <include file="$(find hsr_control)/launch/fake_localization.launch" />
+
+</launch>
