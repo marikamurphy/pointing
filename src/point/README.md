@@ -21,9 +21,9 @@ ros
 * deactivate (leave virtual env)
 * to run server for pytorch type python server.py
 
-* For the simulation in gazebo: 
-* roslaunch hsr_gazebo hsr.launch
-* For the simulation in rviz: roslaunch hsr_description display.launch
+* For the simulation in gazebo/rviz: 
+* roslaunch hsr_gazebo hsr_apt.launch
+* sim_mode then run python move.py from hsr_gazebo directory (TODO: use CallPython)
 
 * https://github.com/stevenjj/openpose_ros
 * 

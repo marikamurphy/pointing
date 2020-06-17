@@ -1,9 +1,0 @@
-<launch>
-  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find hsr_gazebo)/worlds/hsr.world"/>
-   
-  </include>
-   <node name="spawn_urdf" pkg="gazebo_ros" 
-        type="spawn_model" args="-file $(find hsr_description)/robots/hsrb4s.urdf -urdf -model hsr" />
-</launch>

@@ -1,6 +1,6 @@
 # Import socket module 
 import socket                
-  
+HEADERSIZE = 10  
  
 def client(img, threshold):
     # Create a socket object
@@ -12,9 +12,26 @@ def client(img, threshold):
     # connect to the server on local computer 
     s.connect(('127.0.0.1', port)) 
     
-    # receive data from the server 
-    print (s.recv(1024))
-    # close the connection 
-    s.close()
+    while True:
+        full_msg = b''
+        new_msg = True
+        while True:
+            msg = s.recv(16)
+            if new_msg:
+                msglen = int(msg[:HEADERSIZE])
+                new_msg = False
 
+
+            full_msg += msg
+
+            print(len(full_msg))
+
+            if len(full_msg)-HEADERSIZE == msglen:
+                print("full msg recvd")
+                print(full_msg[HEADERSIZE:])
+                new_msg = True
+                full_msg = b""
+                # close the connection
+                s.close()
+                return
 

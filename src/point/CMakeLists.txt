@@ -27,7 +27,6 @@ find_package(
 #find_package(
   #OpenPose REQUIRED
 #)
-find_package(PythonLibs )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -137,7 +136,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenPose_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-  ${PYTHON_INCLUDE_DIRS}
 )
 
 
@@ -158,7 +156,7 @@ add_executable(${PROJECT_NAME}_node
 
 src/subscribeToKinect.cpp
 src/TFBroadcastPR.cpp
-src/CallPython.cpp
+src/Client.cpp
 )
 
 ## Rename C++ executable without prefix
@@ -177,7 +175,6 @@ src/CallPython.cpp
     ${OpenCV_LIBS}   
     ${catkin_LIBRARIES}
     ${OpenPose_LINK_LIBRARY}
-    ${PYTHON_LIBRARIES}
  )
 
 

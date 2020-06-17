@@ -18,7 +18,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 
 #include "point/TFBroadcastPR.h"
-#include "point/CallPython.h"
+#include "point/Client.h"
 
 #define ROOT_TRANSFORM "camera_rgb_optical_frame"
 
@@ -362,11 +362,10 @@ public:
 int main(int argc, char **argv) {
  ros::init(argc, argv, "point_node");
     ros::NodeHandle node;
-    char *file_name = "client";
-    char *function = "client";
-    char *photo_path = "";
-    CallPython objdetection(file_name,function,photo_path,0.8);
-    objdetection.execute();
+    cv::Mat img = cv::imread("/home/users/mmurphy/pointing/src/donut.png");
+
+    Client client(img);
+    client.connection();
     /* op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
 
     try {
