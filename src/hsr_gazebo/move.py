@@ -18,6 +18,7 @@ while not rospy.is_shutdown():
         rospy.logerr_throttle(1, 'Failed to obtain resource: {}\nRetrying...'.format(e))
 
 whole_body.gaze_point(point=geometry.Vector3(x=5, y=5, z=0), ref_frame_id='map')
+whole_body.gaze_point(point=geometry.Vector3(x=-5, y=5, z=0), ref_frame_id='map')
 
 rospy.sleep(5)
 
