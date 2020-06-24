@@ -19,6 +19,11 @@
   <arg unless="$(arg fast_physics)" name="world_suffix" value=""/>
   <arg     if="$(arg fast_physics)" name="world_suffix" value="_fast"/>
 
+  <param name="pub_map_odom_transform" value="true"/>
+  <param name="map_frame" value="map" />
+  <param name="base_frame" value="base_frame" />
+  <param name="odom_frame" value="odom" />
+
   <include file="$(find hsrb_gazebo_launch)/launch/include/hsrb_gazebo_common.xml" pass_all_args="true" >
     <arg name="map" default="$(find tmc_potential_maps)/maps/apartment/map.yaml" />
     <!-- <arg name="map" value="$(find tmc_potential_maps)/maps/white_space/map.yaml" /> -->
