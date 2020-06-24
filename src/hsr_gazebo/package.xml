@@ -11,6 +11,7 @@
   <author>Tamaki Nishino</author>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>gazebo_ros</build_depend>
   <run_depend>hsrb_gazebo_bringup</run_depend>
   <run_depend>hsrb_common_launch</run_depend>
   <run_depend>tmc_potential_maps</run_depend>
@@ -18,5 +19,9 @@
   <!-- for pass_all_args attribute (this tag will be deleted at the next release) -->
   <run_depend>rviz</run_depend>
   <test_depend>roslaunch</test_depend>
-  <export/>
+  <run_depend>gazebo_ros</run_depend>
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/Target"/>
+    <gazebo_ros gazebo_resource_path="${prefix}/Target"/>
+  </export>
 </package>
