@@ -25,10 +25,10 @@
   <param name="odom_frame" value="odom" />
 
   <include file="$(find hsrb_gazebo_launch)/launch/include/hsrb_gazebo_common.xml" pass_all_args="true" >
-    <arg name="map" default="$(find tmc_potential_maps)/maps/apartment/map.yaml" /> 
+    <!-- <arg name="map" default="$(find tmc_potential_maps)/maps/apartment/map.yaml" />  -->
     <!--<arg name="map" value="$(find tmc_potential_maps)/maps/white_space/map.yaml" />-->
-    <arg name="world_name" value="$(find tmc_gazebo_worlds)/worlds/apartment$(arg world_suffix).world" />
-    <!--<arg name="world_name" value="$(find hsr_gazebo)/Target/target.world" />-->
-    <arg name="robot_pos" value="-x 5 -y 5 -z 0 -Y 0.0" />
+    <!-- <arg name="world_name" value="$(find tmc_gazebo_worlds)/worlds/apartment$(arg world_suffix).world" /> -->
+    <arg name="world_name" value="$(find hsr_gazebo)/Target/target.world" />
+    <arg name="robot_pos" value="-x 5.5 -y 5.5 -z 0 -Y 0.0" />
   </include>
 </launch>

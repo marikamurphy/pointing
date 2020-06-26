@@ -20,6 +20,8 @@
   <run_depend>rviz</run_depend>
   <test_depend>roslaunch</test_depend>
   <run_depend>gazebo_ros</run_depend>
+    <run_depend>turtlebot3_description</run_depend>
+
   <export>
     <gazebo_ros gazebo_model_path="${prefix}/Target"/>
     <gazebo_ros gazebo_resource_path="${prefix}/Target"/>
