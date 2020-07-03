@@ -21,6 +21,8 @@
 #include "point/Client.h"
 
 #define ROOT_TRANSFORM "camera_rgb_optical_frame"
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
 class SubscribeToKinect {
 private:
@@ -151,7 +153,7 @@ public:
                 std::vector<int> yIndex{0, i, 1};
                 std::cout << "Set up indicies" << std::endl;
                 float rawX = keyPoints.at({0, 3, 0});
-                std::cout << "Read in rawX." << std::endl;
+                std::/out << "Read in rawX." << std::endl;
                 float rawY = keyPoints.at(yIndex);
                 std::cout << "Read in rawY." << std::endl;
                 if (std::isnan(rawX) || std::isnan(rawY)) {
@@ -223,18 +225,8 @@ public:
         marker_pub.publish(points);
     }
 
-    // check if pixels w/in certain area from the line intersect
-    // with the bounding box of an object
-    void searchLine(std::vector<geometry_msgs::Point> line) {
-      // Go along line
-      // Find size of image and make sure we don't go outside it
-      // Iterate through the grid_line returned from bresenham
-      // Show extened line on the imshow viewer
-      // Think of ways to detect ghosting
-      // Find the depth of a x, y cordinate
-      // Search around the bresenham line
-      // -we could do that in the bresenham method (add to grid_line)
-      // -or create a separate method?
+    /* Determine which pixels are being crossed by the section of the line being viewed. */  
+    void bresLine(std::vector<geometry_msgs::Point> line) {
       std::vector<geometry_msgs::Point> grid_line;
       grid_line = bresenham(line);
       int i;
@@ -248,7 +240,7 @@ public:
           //check below the line
           if(withinImage(x, y-search_area))
             objectIntersection(x, y-search_area);
-      }
+    }
 
     }
     //check if x,y is valid pixel within coordinates of the image
@@ -263,7 +255,10 @@ public:
 
     }
 
-    //get the coordinates of the pixels that need to be searched
+    /* Get the coordinates of the pixels that need to be searched
+     * Input: Two points which are the pixels with the depth value at that spot.
+     * Output: A vector of pixels which are crossed by the line
+     */
     std::vector<geometry_msgs::Point> bresenham (std::vector<geometry_msgs::Point> line) {
         // Make sure we have 2 valid points
         std::vector<geometry_msgs::Point> grid_line;
@@ -278,7 +273,7 @@ public:
 
         float m_new = 2 * (y2 - y1); 
         float slope_error_new = m_new - (x2 - x1); 
-        for (float x = x1, y = y1; x <= x2; x++) 
+        for (float x = x1, y = y1; x <= x2 && x >= 0 && x < SCREEN_WIDTH; x++) 
         { 
             geometry_msgs::Point cor;
             cor.x = x;
