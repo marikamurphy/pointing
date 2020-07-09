@@ -1,24 +1,22 @@
-#include <ros/ros.h>
+#include "point/Client.h"
+#include "point/TFBroadcastPR.h"
+#include "tf2_ros/message_filter.h"//do we need?
 #include <cv_bridge/cv_bridge.h>
-//#include <opencv2/opencv.cpp> //do we need this?
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <math.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/sync_policies/exact_time.h>
+#include <message_filters/synchronizer.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-//#include <openpose/flags.hpp>
 #include <openpose/headers.hpp> //Openpose dependencies
-#include <sensor_msgs/PointCloud2.h>
+#include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <visualization_msgs/Marker.h>
-#include <math.h>
-
-#include "tf2_ros/message_filter.h"//do we need?
-#include <message_filters/subscriber.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/exact_time.h>
-#include <message_filters/sync_policies/approximate_time.h>
-
-#include "point/TFBroadcastPR.h"
-#include "point/Client.h"
+//#include <opencv2/opencv.cpp> //do we need this?
+//#include <openpose/flags.hpp>
 
 #define ROOT_TRANSFORM "camera_rgb_optical_frame"
 #define SCREEN_WIDTH 640
@@ -43,11 +41,12 @@ private:
 
 public:
     ros::Publisher marker_pub;
+    /* Constructor for Subscribe to Kinect.  Initializes opWrapper and broadPRNavFix. */
     SubscribeToKinect(op::Wrapper& wrapper) : opWrapper(wrapper), broadPRNavFix(ROOT_TRANSFORM, "offset_navfixed") { }
 
     void masterCallback(const sensor_msgs::Image::ConstPtr &color, const sensor_msgs::Image::ConstPtr &depth) {
         ROS_INFO("OMG LOL");
-        // depth image stuff
+        /* Save the image and depth map to class variables. */
         depth_image = cv_bridge::toCvCopy(depth, depth->encoding)->image;
         color_image = cv_bridge::toCvCopy(color, color->encoding)->image;
 
