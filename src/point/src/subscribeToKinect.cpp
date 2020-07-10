@@ -70,13 +70,12 @@ public:
     }    
 
     // Adapted from https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/examples/tutorial_api_cpp/01_body_from_image_default.cpp
-    /* Get the DatumProcessed with all of the information on body key points. */
+    /* Get the Datum with the body key points. */
     auto getKeyPoints() {
         const op::Matrix imageToProcess = OP_CV2OPCONSTMAT(color_image);
         auto datum = opWrapper.emplaceAndPop(imageToProcess);
         /* Error checking datum processed. */
         if (datum != nullptr) {
-            //printKeypoints(datum);
             return datum;
         } else {
             op::opLog("Image could not be processed.", op::Priority::High);
@@ -84,20 +83,18 @@ public:
         }
     }
 
-    //extract points from datumPtr
+    /* Print relevant points to console(lRShoulder LRWrist) */
     void printKeypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumPtr) {
         try {
             if (datumPtr != nullptr && !datumPtr->empty()) {
-                // op::opLog("Body keypoints: " + datumPtr->at(0)->poseKeypoints.toString(), op::Priority::High);
-                showBodyKeypoints(datumPtr->at(0)->poseKeypoints);
+                op::opLog("Body keypoints: " + datumPtr->at(0)->poseKeypoints.toString(), op::Priority::High);
             }
         } catch (const std::exception& e) {
-            //op::error(e.what(), ___LINE__, __FUNCTION__, __FILE__);
             op::error(e.what());
         }
     }
 
-    //this can be used to publish all of the openpose keypoints in keypoints
+    // Publish all of the openpose keypoints in keypoints
     void showBodyKeypoints(const op::Array<float>& keyPoints) {
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
