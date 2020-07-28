@@ -8,8 +8,10 @@ add_compile_options(-std=c++11)
 set(OpenPose_DIR /home/users/mmurphy/openpose)
 set(OpenPose_INCLUDE_DIRS ${OpenPose_DIR}/include)
 set(OpenPose_LINK_LIBRARY ${OpenPose_DIR}/build/src/openpose/libopenpose.so)
+set (EIGEN3_INCLUDE_DIR = /usr/include/eigen3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+#list(APPEND CMAKE_INCLUDE_PATH "/usr/include/eigen3")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -23,9 +25,11 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(
   OpenCV
+  #Eigen3 REQUIRED
 )
 #find_package(
   #OpenPose REQUIRED
+  
 #)
 
 ## System dependencies are found with CMake's conventions
@@ -136,6 +140,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenPose_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 

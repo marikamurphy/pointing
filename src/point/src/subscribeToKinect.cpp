@@ -24,7 +24,7 @@
 //#include <opencv2/opencv.cpp> //do we need this?
 //#include <openpose/flags.hpp>
 
-#define ROOT_TRANSFORM "camera_rgb_optical_frame"
+#define ROOT_TRANSFORM "camera_rgb_optical_frame" //TODO: change for hsr
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
@@ -43,6 +43,7 @@ private:
     /* All of the depth values at each location.  Given in terms of the distance from the camera*/
     cv::Mat depth_image;
     cv::Mat color_image;
+    int **map2to3;
     op::Wrapper& opWrapper;
     geometry_msgs::Point elbow;
     geometry_msgs::Point wrist;
@@ -53,10 +54,9 @@ public:
 
      /* Puts values in the p_ident matrix. */
     void set_p_ident () {
-        //p_ident(3,4);
-        p_ident << 1, 0, 0,0,
-                   0, 1, 0,0,
-                   0, 0, 1,0;
+        p_ident << 1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, 1, 0;
     }
 
     /* Puts values in the rotation_trans_mat.  It is all 0's since there's not difference between */
@@ -67,7 +67,7 @@ public:
                               0, 0, 0, 0;
     }
 
-    /*  */
+    /* creates camera callibration matrix */
     void set_cam_call (float fx, float fy, float cx, float cy) {
         float _fx = 1 / fx;
         float _fy = 1 / fy;
@@ -104,6 +104,42 @@ public:
         raw_2d_points = p_real * raw_3d_coords;
     }
 
+    /* Create the grid that holds the mapping.*/
+    void initialize_point_grid() {
+        int **map2to3 = (int **) malloc(sizeof(int *) * 480);
+        for (int r = 0; r < 480; r++) {
+            map2to3[r] = (int *) malloc(sizeof(int) * 640);
+            for (int c = 0; c < 640; c++) {
+                map2to3[r][c] = -1; // -1 initialized
+            }
+        }
+    }
+
+    /* Given a pixel in the form x, y, return the 3D value corresponding to that location. */
+    geometry_msgs::Point get_3d_point(int x, int y) {
+        int index = map2to3[x][y];
+        geometry_msgs::Point ret;
+        ret.x = (0, index);
+        ret.y = (1, index);
+        ret.z = (2, index);
+        return ret;
+    }
+
+    /* Take the values of raw_2d_points and put them into a grid.
+     * To retrieve a point of a pixel <x, y>, grab the index at <x, y> and 
+     * index into raw_3d_points. */
+    void build2Dto3DMap() {
+        for (int point = 0; point < 480 * 640; point++) {
+            float scale = raw_2d_points(2, point);				// Find w
+            if (std::isnan(scale)) continue;
+            int px = (int) (raw_2d_points(0, point) / scale);  // Calculate pixel coordinate
+            int py = (int) (raw_2d_points(1, point) / scale);
+            if (map2to3[py][px] == -1) map2to3[py][px] = point; // If first visit, set the index mapping
+            else if (raw_2d_points(2, map2to3[py][px]) > scale) // If the previous index was further from the camera than this one
+                map2to3[py][px] = point; // Store current index
+        }
+    }
+
     /* Constructor for Subscribe to Kinect.  Initializes opWrapper and sets value for p_ident. */
     SubscribeToKinect(op::Wrapper& wrapper) : opWrapper(wrapper) { 
         set_p_ident(); 
@@ -122,14 +158,6 @@ public:
         cv::waitKey(1);
         /* Now we run openpose on it. */
         get_key_points();
-    }
-
-   
-
-    Eigen::MatrixXf get_p_real() {
-        // p_ideal = p_ident * rotation_trans_mat;
-        // p_real = p_ideal * cam_cal;
-        // return p_real;
     }
 
     /* Get camera calibration values.  Adjust them and put into camera calibration matrix. */
@@ -324,10 +352,11 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    /* Create the subscribe to kinect object. */
     SubscribeToKinect kSub(opWrapper);
-
+    /* Grab the color and depth image. */
     message_filters::Subscriber<sensor_msgs::Image> depth_image_test(node, "/camera/depth/image", 10);
-    message_filters::Subscriber<sensor_msgs::Image> image_test(node, "/camera/rgb/image_color", 10);
+    message_filters::Subscriber<sensor_msgs::Image> image_test(node, "/camera/rgb/image_color", 10); //TODO: fix for hsr
 
     //message_filters::Subscriber ptCloud(node, "camera/depth/points", 10);
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
