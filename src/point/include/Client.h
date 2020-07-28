@@ -5,8 +5,9 @@
 
 class Client {
     public:
-        Client (cv::Mat photo);
-        void connection();
+        Client ();
+        int connection();
+        int sendCV(int sockfd, cv::Mat src);
 
     private:
         cv::Mat _photo;

@@ -1,54 +1,102 @@
 #include "Client.h"
-#include <stdio.h> 
-#include <sys/socket.h> 
-#include <arpa/inet.h> 
-#include <unistd.h> 
-#include <string.h> 
-#define PORT 3211 
 
-Client::Client(cv::Mat photo){
-    _photo = photo;
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <strings.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+#include <iostream>
+#include <vector>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+
+#define PORT 3211 
+#define IP "127.0.0.1"
+
+using namespace std;
+
+
+Client::Client(){
 
 }
 
-void Client::connection(){
-    int sock = 0, valread; 
-    int n = 0;
-    int bytes = 0;
-    struct sockaddr_in serv_addr; 
-    char buffer[1024] = {0}; 
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-    { 
-        printf("\n Socket creation error \n"); 
-    } 
-   
-    serv_addr.sin_family = AF_INET; 
-    serv_addr.sin_port = htons(PORT); 
-       
+int Client::connection(){
+
+    // Create the client socket
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+    {
+        printf("ERROR opening socket");
+        return -1;
+    }
+    // Define the server address
+    struct sockaddr_in serv_addr;
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
     // Convert IPv4 and IPv6 addresses from text to binary form 
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)  
+    if(inet_pton(AF_INET, IP, &serv_addr.sin_addr)<=0)  
     { 
         printf("\nInvalid address/ Address not supported \n"); 
     } 
-   
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
-    { 
-        printf("\nConnection Failed \n"); 
+    
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        perror("ERROR connecting");
+        return -1;
     }
-
-    int photoSize = _photo.total()*_photo.elemSize();
-    printf("height: %d width: %d\n", _photo.rows, _photo.cols);
-
-    if((bytes = send(sock, _photo.data, photoSize, 0))<0){
-     printf("Error while sending..");
-   }
-    else{
-        printf( "Frame sent sucessfuly" );
-        printf( "%d bytes sent.", bytes ); 
-
+    // Server will send what connetion number this is
+    char buffer[256];
+    bzero(buffer, 256);
+    if (read(sockfd, buffer, sizeof(buffer)) < 0)
+    {
+        perror("ERROR reading from socket");
+        return -1;
     }
-   
-   valread = read( sock , buffer, 1024); 
-   printf("%s\n",buffer ); 
+    // Tell server how many cameras
+    // int devices = htonl(k4a_device_get_installed_count());
+    // if (write(sockfd, &devices, sizeof(devices)) < 0)
+    // {
+    //     perror("ERROR writing to socket");
+    //     return -1;
+    // }
+    printf("Successfully connected as client number: %s\n", buffer);
+    return sockfd;
     
 } 
+
+
+int Client::sendCV(int sockfd, cv::Mat src)
+{
+    vector<uchar> buf;
+    cv::imencode(".jpg", src, buf);
+    // Send size first
+    int len = buf.size();
+    if (write(sockfd, &len, sizeof(len)) < 0)
+    {
+        perror("ERROR writing to socket");
+        return -1;
+    }
+    cout << "sent size" << endl;
+    if (write(sockfd, buf.data(), buf.size()) < 0)
+    {
+        perror("ERROR writing to socket");
+        return -1;
+    }
+    cout << "sent data" << endl;
+    
+    //get back coordinates
+    char buffer[256];
+    bzero(buffer, 256);
+    if (read(sockfd, buffer, sizeof(buffer)) < 0)
+    {
+        perror("ERROR reading from socket");
+        return -1;
+    }
+    printf("%s\n", buffer); //TODO: we will recieve coordinates back, need to actually read these in
+    return 0;
+}

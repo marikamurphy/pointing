@@ -3,10 +3,8 @@ import socket
 import json 
 import cv2
 import numpy as np
+INTSIZE = 4
 HEADERSIZE = 10
-FRAME_WIDTH = 1389
-FRAME_HEIGHT = 930
-CHANNEL=3
 
 
 def socketToNumpy(cameraFeed, sockData):
@@ -17,6 +15,7 @@ def socketToNumpy(cameraFeed, sockData):
     cameraFeed = np.tile(sockData, 1).reshape((i,j,k))
 
     return cameraFeed
+
 # next create a socket object 
 s = socket.socket()          
 print ("Socket successfully created")
@@ -41,45 +40,27 @@ print ("socket is listening")
 # a forever loop until we interrupt it or  
 # an error occurs 
 running = True
-while running: 
-  
-   # Establish connection with client. 
-   c, addr = s.accept()      
-   print ('Got connection from', addr )
-   shape = (FRAME_HEIGHT, FRAME_WIDTH, CHANNEL)
-   cameraFeed = np.zeros(shape, np.uint8)
-   imgSize = cameraFeed.size
-   sockData = b''
-   result = True
+while running:
+   numClients = 0 
+   while numClients == 0:
+        # Establish connection with client. 
+        c, addr = s.accept()      
+        print ('Got connection from', addr )
+        numClients+=1
+        c.send(bytes(1))
+    
+   size = 0
+   #read in the size first
+   n = c.recv(INTSIZE)
+   n = int.from_bytes(n, byteorder='little')
+   if n < 0:
+       print("ERROR reading from socket (readCV size)")
+   print("Size of image: %d\n" %(n))
 
-   while imgSize:
-      nbytes=c.recv(imgSize)
-      if not nbytes: break; result = False
-      sockData+=nbytes
-      imgSize-=len(nbytes)
-
-   if result:
-      cameraFeed = socketToNumpy(cameraFeed, sockData)
-
-      # Create a window for display.
-      cv2.namedWindow("server");
-      cv2.imshow("server", cameraFeed)
-      key = cv2.waitKey(30)
-      running = key
-
-      # esc
-      if key==27:
-         running =False
-   else:
-      running=False
-
-
-
-   d = [100,200,300,400]
-   msg = json.dumps(d)
-   msg = bytes(f"{len(msg):<{HEADERSIZE}}"+msg, "utf-8")
-   # send a thank you message to the client.  
-   c.send(msg) 
-  
-   # Close the connection with the client 
-   c.close()
+   buf = c.recv(n)
+   
+   nparr = np.fromstring(buf, np.uint8)
+   image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+   cv2.namedWindow("server")
+   cv2.imshow("server", image)
+   key = cv2.waitKey(30)
