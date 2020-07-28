@@ -1,4 +1,17 @@
-
+#include "Client.h"
+#include "SubscribeToKinect.h"
+#include "tf2_ros/message_filter.h"//do we need?
+#include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <math.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/synchronizer.h>
+#include <openpose/headers.hpp> //Openpose dependencies
+#include <ros/ros.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
 
 int main(int argc, char **argv) {
  ros::init(argc, argv, "point_node");
@@ -41,7 +54,7 @@ int main(int argc, char **argv) {
             ROS_ERROR("%s",ex.what());
             ros::Duration(1.0).sleep();
             }
-            kSub.get_rotation_trans_mat(transform);
+            kSub.print_rotation_trans_mat(transform);
         }
     
     ros::spin();

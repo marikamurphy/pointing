@@ -159,7 +159,8 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node
 
-src/subscribeToKinect.cpp
+src/point_identification_node.cpp
+src/SubscribeToKinect.cpp
 src/TFBroadcastPR.cpp
 src/Client.cpp
 )

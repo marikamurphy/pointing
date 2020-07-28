@@ -1,100 +1,43 @@
-#ifndef SUBSCRIBE_TO_KINECT_H
-#define SUBSCRIBE_TO_KINECT_H
+// #include "point/Client.h"
+// #include "point/TFBroadcastPR.h"
+#include "ProjectiveUtil.cpp"
+#include "SubscribeToKinect.h"
+// #include "tf2_ros/message_filter.h"//do we need?
+// #include <cv_bridge/cv_bridge.h>
+// #include <eigen3/Eigen/Dense>
+// #include <geometry_msgs/PoseWithCovarianceStamped.h>
+// #include <geometry_msgs/TransformStamped.h>
+// #include <math.h>
+// #include <message_filters/subscriber.h>
+// #include <message_filters/sync_policies/approximate_time.h>
+// #include <message_filters/sync_policies/exact_time.h>
+// #include <message_filters/synchronizer.h>
+// #include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/imgproc/imgproc.hpp>
+// #include <openpose/headers.hpp> //Openpose dependencies
+// #include <ros/ros.h>
+// #include <sensor_msgs/CameraInfo.h>
+// #include <sensor_msgs/PointCloud2.h>
+// #include <tf2/LinearMath/Quaternion.h>
+// #include <tf2/transform_datatypes.h>
+// #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+// #include <tf2_ros/transform_listener.h>
+// #include <visualization_msgs/Marker.h>
+
+#define ROOT_TRANSFORM "camera_rgb_optical_frame" //TODO: change for hsr
+#define SCREEN_WIDTH    640
+#define SCREEN_HEIGHT   480
 
 
-class SubscribeToKinect {
-private:
-    /* Struct to store camera parameters */
-    Eigen::Matrix3f cam_cal;
-    Eigen::MatrixXf p_ideal; // Might be wrong /* p_ident * rotation_trans_mat = p_ideal */
-    Eigen::MatrixXf p_real; // Also might not have correct sizing /* p_ideal * cam_cal = p_real*/
-    Eigen::MatrixXf raw_2d_points;
-    /* Depth values turned into 3D coordinates.  Each column is a point and 
-     * the rows are x, y, z, and w. */ 
-    Eigen::MatrixXf raw_3d_coords;
-    /* All of the depth values at each location.  Given in terms of the distance from the camera*/
-    cv::Mat depth_image;
-    cv::Mat color_image;
-    int **map2to3;
-    op::Wrapper& opWrapper;
-    geometry_msgs::Point elbow;
-    geometry_msgs::Point wrist;
-
-public:
-    ros::Publisher marker_pub;
-
-    /* Takes a depth value and converts it to a 3D x, y, and z. */
-    void depth_to_3D(Eigen::Matrix3f cam_cal, int index, float &x, float &y, float &z) {
-        int row = index / 640;
-        int col = index % 640;
-        z = depth_image.at<float>(row, col);  // Find actual depth
-        x = (col + 0.5 - cam_cal(0, 0)) * cam_cal(0, 2) * z; // Perform frustum calculations
-        y = (row + 0.5 - cam_cal(1, 1)) * cam_cal(1, 2) * z;
-    }
-
-    /* Converts all of the depth values in depth_image and puts the x, y, and z into raw_3D_coords. */
-    void calculate_3D_coords() {
-        raw_3d_coords(4, 307200);
-        for (int index = 0; index < 480 * 640; index++) {
-            float x, y, z;
-            depth_to_3D(cam_cal, index, x, y, z); // First, calculate the actual x, y, and z in question
-            raw_3d_coords(0, index) = x;   // Store these values
-            raw_3d_coords(1, index) = y;
-            raw_3d_coords(2, index) = z;
-            raw_3d_coords(3, index) = 1.0; // Store a 1 for w into the depth matrix (scales in the color 2D matrix)
-        }
-    }
-
-    void multiply_stuff() {
-        p_ideal = p_ident * rotation_trans_mat;
-        p_real = p_ident * cam_cal;
-        raw_2d_points = p_real * raw_3d_coords;
-    }
-
-    /* Create the grid that holds the mapping.*/
-    void initialize_point_grid() {
-        int **map2to3 = (int **) malloc(sizeof(int *) * 480);
-        for (int r = 0; r < 480; r++) {
-            map2to3[r] = (int *) malloc(sizeof(int) * 640);
-            for (int c = 0; c < 640; c++) {
-                map2to3[r][c] = -1; // -1 initialized
-            }
-        }
-    }
-
-    /* Given a pixel in the form x, y, return the 3D value corresponding to that location. */
-    geometry_msgs::Point get_3d_point(int x, int y) {
-        int index = map2to3[x][y];
-        geometry_msgs::Point ret;
-        ret.x = (0, index);
-        ret.y = (1, index);
-        ret.z = (2, index);
-        return ret;
-    }
-
-    /* Take the values of raw_2d_points and put them into a grid.
-     * To retrieve a point of a pixel <x, y>, grab the index at <x, y> and 
-     * index into raw_3d_points. */
-    void build2Dto3DMap() {
-        for (int point = 0; point < 480 * 640; point++) {
-            float scale = raw_2d_points(2, point);				// Find w
-            if (std::isnan(scale)) continue;
-            int px = (int) (raw_2d_points(0, point) / scale);  // Calculate pixel coordinate
-            int py = (int) (raw_2d_points(1, point) / scale);
-            if (map2to3[py][px] == -1) map2to3[py][px] = point; // If first visit, set the index mapping
-            else if (raw_2d_points(2, map2to3[py][px]) > scale) // If the previous index was further from the camera than this one
-                map2to3[py][px] = point; // Store current index
-        }
-    }
 
     /* Constructor for Subscribe to Kinect.  Initializes opWrapper and sets value for p_ident. */
-    SubscribeToKinect(op::Wrapper& wrapper) : opWrapper(wrapper) { 
-        set_p_ident(); 
-        set_cam_call(205.46963709898583, 205.46963709898583, 320.5, 240.5);
-        set_rotation_trans_mat();
+    SubscribeToKinect::SubscribeToKinect(op::Wrapper& wrapper) : opWrapper(wrapper) { 
+        //set_p_ident(); //TODO
+        //set_cam_call(205.46963709898583, 205.46963709898583, 320.5, 240.5); //TODO
+        //set_rotation_trans_mat(); //TODO
     }
 
-    void master_callback(const sensor_msgs::Image::ConstPtr &color, const sensor_msgs::Image::ConstPtr &depth) {
+    void SubscribeToKinect::master_callback(const sensor_msgs::Image::ConstPtr &color, const sensor_msgs::Image::ConstPtr &depth) {
         ROS_INFO("OMG LOL");
         /* Save the image and depth map to class variables. */
         depth_image = cv_bridge::toCvCopy(depth, depth->encoding)->image;
@@ -108,7 +51,7 @@ public:
     }
 
     /* Get camera calibration values.  Adjust them and put into camera calibration matrix. */
-    Eigen::Matrix3f camera_info_callback(const sensor_msgs::CameraInfo::ConstPtr &msg) {
+    Eigen::Matrix3f SubscribeToKinect::camera_info_callback(const sensor_msgs::CameraInfo::ConstPtr &msg) {
         float fx = 1/msg->K[0];
         float fy = 1/msg->K[4];
         float cx = msg->K[2];
@@ -119,9 +62,74 @@ public:
         return cam_cal;
     }    
 
+    /* Takes a depth value and converts it to a 3D x, y, and z. */
+    void SubscribeToKinect::depth_to_3D(Eigen::Matrix3f cam_cal, int index, float &x, float &y, float &z) {
+        int row = index / 640;
+        int col = index % 640;
+        z = depth_image.at<float>(row, col);  // Find actual depth
+        x = (col + 0.5 - cam_cal(0, 0)) * cam_cal(0, 2) * z; // Perform frustum calculations
+        y = (row + 0.5 - cam_cal(1, 1)) * cam_cal(1, 2) * z;
+    }
+
+    /* Converts all of the depth values in depth_image and puts the x, y, and z into raw_3D_coords. */
+    void SubscribeToKinect::calculate_3D_coords() {
+        raw_3d_coords(4, 307200);
+        for (int index = 0; index < 480 * 640; index++) {
+            float x, y, z;
+            depth_to_3D(cam_cal, index, x, y, z); // First, calculate the actual x, y, and z in question
+            raw_3d_coords(0, index) = x;   // Store these values
+            raw_3d_coords(1, index) = y;
+            raw_3d_coords(2, index) = z;
+            raw_3d_coords(3, index) = 1.0; // Store a 1 for w into the depth matrix (scales in the color 2D matrix)
+        }
+    }
+
+    void SubscribeToKinect::multiply_stuff() {
+        //p_ideal = p_ident * rotation_trans_mat;
+        p_real = p_ideal * cam_cal;
+        raw_2d_points = p_real * raw_3d_coords;
+    }
+
+    /* Create the grid that holds the mapping.*/
+    void SubscribeToKinect::initialize_point_grid() {
+        int **map2to3 = (int **) malloc(sizeof(int *) * 480);
+        for (int r = 0; r < 480; r++) {
+            map2to3[r] = (int *) malloc(sizeof(int) * 640);
+            for (int c = 0; c < 640; c++) {
+                map2to3[r][c] = -1; // -1 initialized
+            }
+        }
+    }
+
+    /* Given a pixel in the form x, y, return the 3D value corresponding to that location. */
+    geometry_msgs::Point SubscribeToKinect::get_3d_point(int x, int y) {
+        int index = map2to3[x][y];
+        geometry_msgs::Point ret;
+        ret.x = (0, index);
+        ret.y = (1, index);
+        ret.z = (2, index);
+        return ret;
+    }
+
+    /* Take the values of raw_2d_points and put them into a grid.
+     * To retrieve a point of a pixel <x, y>, grab the index at <x, y> and 
+     * index into raw_3d_points. */
+    void SubscribeToKinect::build2Dto3DMap() {
+        for (int point = 0; point < 480 * 640; point++) {
+            float scale = raw_2d_points(2, point);				// Find w
+            if (std::isnan(scale)) continue;
+            int px = (int) (raw_2d_points(0, point) / scale);  // Calculate pixel coordinate
+            int py = (int) (raw_2d_points(1, point) / scale);
+            if (map2to3[py][px] == -1) map2to3[py][px] = point; // If first visit, set the index mapping
+            else if (raw_2d_points(2, map2to3[py][px]) > scale) // If the previous index was further from the camera than this one
+                map2to3[py][px] = point; // Store current index
+        }
+    }
+
+    
     // Adapted from https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/examples/tutorial_api_cpp/01_body_from_image_default.cpp
     /* Get the Datum with the body key points. */
-    std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>> get_key_points() {
+    std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>> SubscribeToKinect::get_key_points() {
         const op::Matrix imageToProcess = OP_CV2OPCONSTMAT(color_image);
         auto datum = opWrapper.emplaceAndPop(imageToProcess); //TODO:TDatumsSP
         /* Error checking datum processed. */
@@ -134,7 +142,7 @@ public:
     }
 
     /* Adjust a x, y, depth point to reflect the camera calibration. */
-    geometry_msgs::Point transform_point(float x, float y, float depth_val) {
+    geometry_msgs::Point SubscribeToKinect::transform_point(float x, float y, float depth_val) {
         geometry_msgs::Point point;
         point.x = (x + 0.5 - cam_cal(0, 2)) * cam_cal(0, 0) * depth_val;
         point.y = (y + 0.5 - cam_cal(1, 2)) * cam_cal(1, 1) * depth_val;
@@ -143,7 +151,7 @@ public:
     }
 
     /* Print all of the body keypoints for the first person in the list. */
-    void print_keypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumPtr) {
+    void SubscribeToKinect::print_keypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumPtr) {
         try {
             if (datumPtr != nullptr && !datumPtr->empty()) {
                 op::opLog("Body keypoints: " + datumPtr->at(0)->poseKeypoints.toString(), op::Priority::High);
@@ -154,7 +162,7 @@ public:
     }
 
     // Publish the relevant keypoints for wrists and elbows.
-    void show_body_keypoints(const op::Array<float>& keyPoints) {
+    void SubscribeToKinect::show_body_keypoints(const op::Array<float>& keyPoints) {
         /* Set up parameters for points. */
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
@@ -183,7 +191,7 @@ public:
     }
 
     // Locate limb positions 
-    std::vector<geometry_msgs::Point> find_end_points(const op::Array<float>& keyPoints) {
+    std::vector<geometry_msgs::Point> SubscribeToKinect::find_end_points(const op::Array<float>& keyPoints) {
         visualization_msgs::Marker points;
         std::vector<geometry_msgs::Point> ret;
         if (keyPoints.getSize(0)){
@@ -215,7 +223,7 @@ public:
     }
 
     // Find what's being pointed at out in space
-    std::vector<geometry_msgs::Point> extend_point (std::vector<geometry_msgs::Point> origin, int scalar) {
+    std::vector<geometry_msgs::Point> SubscribeToKinect::extend_point (std::vector<geometry_msgs::Point> origin, int scalar) {
         geometry_msgs::Point vec;
         // Create vector
         vec.x = origin[1].x - origin[0].x;
@@ -239,7 +247,7 @@ public:
     }
     
     /* Show points on vector in rviz. Creates a new geometry_msg::Point each time it is called. */
-    void print_points (std::vector<geometry_msgs::Point> pts) {
+    void SubscribeToKinect::print_points (std::vector<geometry_msgs::Point> pts) {
         /* Create visualization msg and set parameters. */
         visualization_msgs::Marker points;
         points.header.frame_id = ROOT_TRANSFORM;
@@ -261,7 +269,7 @@ public:
         marker_pub.publish(points);
     }
 
-    void get_rotation_trans_mat (geometry_msgs::TransformStamped transform) {
+    void SubscribeToKinect::print_rotation_trans_mat (geometry_msgs::TransformStamped transform) {
         //Eigen::MatrixXf pointMatrix(10,3);
         Eigen::MatrixXd pointMatrix;
         int rowPointer = 0;
@@ -281,7 +289,3 @@ public:
         z = translation.z;
         std::cout << "x: " << x << " y: " << y << " z: " << z << "\n";
     }
-
-};
-
-#endif
