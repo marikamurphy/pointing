@@ -1,28 +1,4 @@
-// #include "point/Client.h"
-// #include "point/TFBroadcastPR.h"
-#include "ProjectiveUtil.cpp"
 #include "SubscribeToKinect.h"
-// #include "tf2_ros/message_filter.h"//do we need?
-// #include <cv_bridge/cv_bridge.h>
-// #include <eigen3/Eigen/Dense>
-// #include <geometry_msgs/PoseWithCovarianceStamped.h>
-// #include <geometry_msgs/TransformStamped.h>
-// #include <math.h>
-// #include <message_filters/subscriber.h>
-// #include <message_filters/sync_policies/approximate_time.h>
-// #include <message_filters/sync_policies/exact_time.h>
-// #include <message_filters/synchronizer.h>
-// #include <opencv2/highgui/highgui.hpp>
-// #include <opencv2/imgproc/imgproc.hpp>
-// #include <openpose/headers.hpp> //Openpose dependencies
-// #include <ros/ros.h>
-// #include <sensor_msgs/CameraInfo.h>
-// #include <sensor_msgs/PointCloud2.h>
-// #include <tf2/LinearMath/Quaternion.h>
-// #include <tf2/transform_datatypes.h>
-// #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-// #include <tf2_ros/transform_listener.h>
-// #include <visualization_msgs/Marker.h>
 
 #define ROOT_TRANSFORM "camera_rgb_optical_frame" //TODO: change for hsr
 #define SCREEN_WIDTH    640
@@ -52,78 +28,8 @@
 
     /* Get camera calibration values.  Adjust them and put into camera calibration matrix. */
     Eigen::Matrix3f SubscribeToKinect::camera_info_callback(const sensor_msgs::CameraInfo::ConstPtr &msg) {
-        float fx = 1/msg->K[0];
-        float fy = 1/msg->K[4];
-        float cx = msg->K[2];
-        float cy = msg->K[5];
-        cam_cal << fx,  0, cx,
-                   0, fy,  0,
-                   0,  0,  1;
+        cam_cal = getCameraIntrinsicMatrix(msg->K[0], msg->K[4], msg->K[2], msg->K[5]);
         return cam_cal;
-    }    
-
-    /* Takes a depth value and converts it to a 3D x, y, and z. */
-    void SubscribeToKinect::depth_to_3D(Eigen::Matrix3f cam_cal, int index, float &x, float &y, float &z) {
-        int row = index / 640;
-        int col = index % 640;
-        z = depth_image.at<float>(row, col);  // Find actual depth
-        x = (col + 0.5 - cam_cal(0, 0)) * cam_cal(0, 2) * z; // Perform frustum calculations
-        y = (row + 0.5 - cam_cal(1, 1)) * cam_cal(1, 2) * z;
-    }
-
-    /* Converts all of the depth values in depth_image and puts the x, y, and z into raw_3D_coords. */
-    void SubscribeToKinect::calculate_3D_coords() {
-        raw_3d_coords(4, 307200);
-        for (int index = 0; index < 480 * 640; index++) {
-            float x, y, z;
-            depth_to_3D(cam_cal, index, x, y, z); // First, calculate the actual x, y, and z in question
-            raw_3d_coords(0, index) = x;   // Store these values
-            raw_3d_coords(1, index) = y;
-            raw_3d_coords(2, index) = z;
-            raw_3d_coords(3, index) = 1.0; // Store a 1 for w into the depth matrix (scales in the color 2D matrix)
-        }
-    }
-
-    void SubscribeToKinect::multiply_stuff() {
-        //p_ideal = p_ident * rotation_trans_mat;
-        p_real = p_ideal * cam_cal;
-        raw_2d_points = p_real * raw_3d_coords;
-    }
-
-    /* Create the grid that holds the mapping.*/
-    void SubscribeToKinect::initialize_point_grid() {
-        int **map2to3 = (int **) malloc(sizeof(int *) * 480);
-        for (int r = 0; r < 480; r++) {
-            map2to3[r] = (int *) malloc(sizeof(int) * 640);
-            for (int c = 0; c < 640; c++) {
-                map2to3[r][c] = -1; // -1 initialized
-            }
-        }
-    }
-
-    /* Given a pixel in the form x, y, return the 3D value corresponding to that location. */
-    geometry_msgs::Point SubscribeToKinect::get_3d_point(int x, int y) {
-        int index = map2to3[x][y];
-        geometry_msgs::Point ret;
-        ret.x = (0, index);
-        ret.y = (1, index);
-        ret.z = (2, index);
-        return ret;
-    }
-
-    /* Take the values of raw_2d_points and put them into a grid.
-     * To retrieve a point of a pixel <x, y>, grab the index at <x, y> and 
-     * index into raw_3d_points. */
-    void SubscribeToKinect::build2Dto3DMap() {
-        for (int point = 0; point < 480 * 640; point++) {
-            float scale = raw_2d_points(2, point);				// Find w
-            if (std::isnan(scale)) continue;
-            int px = (int) (raw_2d_points(0, point) / scale);  // Calculate pixel coordinate
-            int py = (int) (raw_2d_points(1, point) / scale);
-            if (map2to3[py][px] == -1) map2to3[py][px] = point; // If first visit, set the index mapping
-            else if (raw_2d_points(2, map2to3[py][px]) > scale) // If the previous index was further from the camera than this one
-                map2to3[py][px] = point; // Store current index
-        }
     }
 
     
