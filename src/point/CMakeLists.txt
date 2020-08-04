@@ -5,7 +5,7 @@ project(point)
 #add_compile_options(-std=c++11 -g)
 add_compile_options(-std=c++11)
 
-set(OpenPose_DIR /home/users/mmurphy/openpose)
+set(OpenPose_DIR /home/users/ljernigan/openpose)
 set(OpenPose_INCLUDE_DIRS ${OpenPose_DIR}/include)
 set(OpenPose_LINK_LIBRARY ${OpenPose_DIR}/build/src/openpose/libopenpose.so)
 set (EIGEN3_INCLUDE_DIR = /usr/include/eigen3)

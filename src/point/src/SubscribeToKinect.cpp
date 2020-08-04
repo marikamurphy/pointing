@@ -1,4 +1,5 @@
 #include "SubscribeToKinect.h"
+#include "ProjectiveUtil.h"
 
 #define ROOT_TRANSFORM "camera_rgb_optical_frame" //TODO: change for hsr
 #define SCREEN_WIDTH    640
@@ -8,11 +9,11 @@
 
     /* Constructor for Subscribe to Kinect.  Initializes opWrapper and sets value for p_ident. */
     SubscribeToKinect::SubscribeToKinect(op::Wrapper& wrapper) : opWrapper(wrapper) { 
-        //set_p_ident(); //TODO
         //set_cam_call(205.46963709898583, 205.46963709898583, 320.5, 240.5); //TODO
         //set_rotation_trans_mat(); //TODO
     }
 
+    /* recieve color and depth images from the camera and store*/
     void SubscribeToKinect::master_callback(const sensor_msgs::Image::ConstPtr &color, const sensor_msgs::Image::ConstPtr &depth) {
         ROS_INFO("OMG LOL");
         /* Save the image and depth map to class variables. */
@@ -175,6 +176,7 @@
         marker_pub.publish(points);
     }
 
+    /* for debugging purposes: prints the given transform*/
     void SubscribeToKinect::print_rotation_trans_mat (geometry_msgs::TransformStamped transform) {
         //Eigen::MatrixXf pointMatrix(10,3);
         Eigen::MatrixXd pointMatrix;

@@ -14,7 +14,7 @@
 #include <tf2_ros/transform_listener.h>
 
 int main(int argc, char **argv) {
- ros::init(argc, argv, "point_node");
+    ros::init(argc, argv, "point_node");
     ros::NodeHandle node;
     /* Set up opWrapper and point to the right model folder. */
     op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
@@ -26,39 +26,41 @@ int main(int argc, char **argv) {
     } catch (const std::exception& e) {
         return -1;
     }
-
     /* Create the subscribe to kinect object. */
     SubscribeToKinect kSub(opWrapper);
     /* Grab the color and depth image. */
-    message_filters::Subscriber<sensor_msgs::Image> depth_image_test(node, "/camera/depth/image", 10);
-    message_filters::Subscriber<sensor_msgs::Image> image_test(node, "/camera/rgb/image_color", 10); //TODO: fix for hsr
+    message_filters::Subscriber<sensor_msgs::Image> depth_image_test(node, "/head_rgbd_sensor_depth_registered_frame", 10);
+    message_filters::Subscriber<sensor_msgs::Image> image_test(node, "/head_rgbd_sensor_rgb_frame", 10); //TODO: fix for hsr
+    // Show rgb and depth image
 
-    //message_filters::Subscriber ptCloud(node, "camera/depth/points", 10);
+    // Synchronize the data from the depth and rgb camera
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
-
     message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), image_test, depth_image_test);
     sync.registerCallback(boost::bind(&SubscribeToKinect::master_callback, &kSub, _1, _2));
 
-    kSub.marker_pub = node.advertise<visualization_msgs::Marker>("visualization_marker", 10);
-    tf2_ros::Buffer buffer;
-    tf2_ros::TransformListener listener(buffer);
-    geometry_msgs::TransformStamped transform;
-    
+    // I don't know what this does. I hope it's not important.
+    // kSub.marker_pub = node.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+    // tf2_ros::Buffer buffer;
+    // tf2_ros::TransformListener listener(buffer);
+    // geometry_msgs::TransformStamped transform;
 
-        while (node.ok()) {
-            try{                                    
-            transform = buffer.lookupTransform("/head_rgbd_sensor_rgb_fra/me", "/head_rgbd_sensor_depth_registered_frame",  
-                                    ros::Time(0));
-            }
-            catch (tf2::TransformException ex){
-            ROS_ERROR("%s",ex.what());
-            ros::Duration(1.0).sleep();
-            }
-            kSub.print_rotation_trans_mat(transform);
-        }
-    
-    ros::spin();
+    // while (node.ok()) {
+    //     try{                                    
+    //     transform = buffer.lookupTransform("/head_rgbd_sensor_rgb_frame", "/head_rgbd_sensor_depth_registered_frame",  
+    //                             ros::Time(0));
+    //     }
+    //     catch (tf2::TransformException ex){
+    //     ROS_ERROR("%s",ex.what());
+    //     ros::Duration(1.0).sleep();
+    //     }
+    //     kSub.print_rotation_trans_mat(transform);
+    // }
 
+    // ros::spin();
+    
+    /* Create cam_cal */
+    Eigen::Matrix3f cam_cal = getCameraIntrinsicMatrix(205.46963709898583, 205.46963709898583, 320.5, 240.5);
+    
     return 0;
 
 }

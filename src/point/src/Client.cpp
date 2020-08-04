@@ -57,13 +57,7 @@ int Client::connection(){
         perror("ERROR reading from socket");
         return -1;
     }
-    // Tell server how many cameras
-    // int devices = htonl(k4a_device_get_installed_count());
-    // if (write(sockfd, &devices, sizeof(devices)) < 0)
-    // {
-    //     perror("ERROR writing to socket");
-    //     return -1;
-    // }
+    
     printf("Successfully connected as client number: %s\n", buffer);
     return sockfd;
     

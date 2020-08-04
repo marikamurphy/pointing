@@ -1,6 +1,6 @@
 #include "ProjectiveUtil.h"
 
-/*  */
+/*  Creates a 3x4 identity matrix for use in camera calibration calcs */
 Eigen::MatrixXf getPIdent() {
     Eigen::MatrixXf pIdent = Eigen::ArrayXXf::Zero(3, 4);
     for(int i = 0; i < 3; i++)
@@ -8,7 +8,7 @@ Eigen::MatrixXf getPIdent() {
     return pIdent;
 }
 
-/**/
+/* Creates the camera intrinsic matrix*/
 Eigen::Matrix3f getCameraIntrinsicMatrix(float fx, float fy, float cx, float cy) {
     Eigen::Matrix3f cameraIntrinsic = Eigen::Matrix3f::Identity(3, 3);
     cameraIntrinsic(0,0) = fx;
@@ -16,23 +16,6 @@ Eigen::Matrix3f getCameraIntrinsicMatrix(float fx, float fy, float cx, float cy)
     cameraIntrinsic(0,3) = cx;
     cameraIntrinsic(1,3) = cy;
     return cameraIntrinsic;
-}
-
-/* Takes a depth value and converts it to a 3D x, y, and z. */
-void depth_to_3D(Eigen::Matrix3f cam_cal, int index, float &x, float &y, float &z, cv::Mat depth_image) {
-    int row = index / 640;
-    int col = index % 640;
-    z = depth_image.at<float>(row, col);  // Find actual depth
-    x = (col + 0.5 - cam_cal(0, 0)) * cam_cal(0, 2) * z; // Perform frustum calculations
-    y = (row + 0.5 - cam_cal(1, 1)) * cam_cal(1, 2) * z; // TODO make sure this works.
-}
-
-/* perform calculations to transform 3D coordinates to 2D using camera calibration*/
-Eigen::MatrixXf get_2d_points(Eigen::Matrix3f cam_cal, Eigen::MatrixXf p_ident, Eigen::MatrixXf rotation_trans_mat, Eigen::MatrixXf raw_3d_coords) {
-    Eigen::MatrixXf p_ideal = p_ident * rotation_trans_mat;
-    Eigen::MatrixXf p_real = p_ideal * cam_cal;
-    Eigen::MatrixXf raw_2d_points = p_real * raw_3d_coords;
-    return raw_2d_points;
 }
 
 /* Converts all of the depth values in depth_image and puts the x, y, and z into raw_3D_coords. */
@@ -46,6 +29,21 @@ void calculate_3D_coords(Eigen::MatrixXf raw_3d_coords, Eigen::Matrix3f cam_cal,
         raw_3d_coords(2, index) = z;
         raw_3d_coords(3, index) = 1.0; // Store a 1 for w into the depth matrix (scales in the color 2D matrix)
     }
+}
+
+/* Takes a depth value and converts it to a 3D x, y, and z. Called by calculate_3D_coords. */
+void depth_to_3D(Eigen::Matrix3f cam_cal, int index, float &x, float &y, float &z, cv::Mat depth_image) {
+    int row = index / 640;
+    int col = index % 640;
+    z = depth_image.at<float>(row, col);  // Find actual depth
+    x = (col + 0.5 - cam_cal(0, 0)) * cam_cal(0, 2) * z; // Perform frustum calculations
+    y = (row + 0.5 - cam_cal(1, 1)) * cam_cal(1, 2) * z; // TODO make sure this works.
+}
+
+/* perform calculations to transform 3D coordinates to 2D using camera calibration*/
+Eigen::MatrixXf get_2d_points(Eigen::Matrix3f cam_cal, Eigen::MatrixXf rotation_trans_mat, Eigen::MatrixXf raw_3d_coords) {
+    /* 3x3 * 3x4 * 4x307200 = 3x307200 */
+    return cam_cal * rotation_trans_mat * raw_3d_coords;
 }
 
 /* Create the grid that holds the mapping.*/

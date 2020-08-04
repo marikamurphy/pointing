@@ -77,7 +77,6 @@ public:
     // Find what's being pointed at out in space
     std::vector<geometry_msgs::Point> extend_point (std::vector<geometry_msgs::Point> origin, int scalar); 
     
-    
     /* Show points on vector in rviz. Creates a new geometry_msg::Point each time it is called. */
     void print_points (std::vector<geometry_msgs::Point> pts);
 
