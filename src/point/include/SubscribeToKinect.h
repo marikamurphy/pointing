@@ -4,19 +4,19 @@
 #include "Client.h"
 #include "TFBroadcastPR.h"
 #include "ProjectiveUtil.h"
-#include "tf2_ros/message_filter.h"//do we need?
+// #include "OpenPoseUtil.h" //eventually re-incorporate
+//#include "tf2_ros/message_filter.h"//do we need?
 #include <cv_bridge/cv_bridge.h>
 #include <eigen3/Eigen/Dense>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <math.h>
-#include <message_filters/subscriber.h>
-#include <message_filters/sync_policies/approximate_time.h>
-#include <message_filters/sync_policies/exact_time.h>
-#include <message_filters/synchronizer.h>
+//#include <message_filters/subscriber.h>
+//#include <message_filters/sync_policies/approximate_time.h>
+//#include <message_filters/sync_policies/exact_time.h>
+//#include <message_filters/synchronizer.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <openpose/headers.hpp> //Openpose dependencies
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -43,7 +43,7 @@ private:
     cv::Mat depth_image;
     cv::Mat color_image;
     int **map2to3;
-    op::Wrapper& opWrapper;
+    
     geometry_msgs::Point elbow;
     geometry_msgs::Point wrist;
 
@@ -51,28 +51,15 @@ public:
     ros::Publisher marker_pub;
 
     /* Constructor for Subscribe to Kinect.  Initializes opWrapper and sets value for p_ident. */
-    SubscribeToKinect(op::Wrapper& wrapper);
+    SubscribeToKinect();
 
     void master_callback(const sensor_msgs::Image::ConstPtr &color, const sensor_msgs::Image::ConstPtr &depth);
 
     /* Get camera calibration values.  Adjust them and put into camera calibration matrix. */
     Eigen::Matrix3f camera_info_callback(const sensor_msgs::CameraInfo::ConstPtr &msg);
 
-    // Adapted from https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/examples/tutorial_api_cpp/01_body_from_image_default.cpp
-    /* Get the Datum with the body key points. */
-    std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>> get_key_points();
-
     /* Adjust a x, y, depth point to reflect the camera calibration. */
     geometry_msgs::Point transform_point(float x, float y, float depth_val);
-
-    /* Print all of the body keypoints for the first person in the list. */
-    void print_keypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumPtr);
-
-    // Publish the relevant keypoints for wrists and elbows.
-    void show_body_keypoints(const op::Array<float>& keyPoints);
-  
-    // Locate limb positions 
-    std::vector<geometry_msgs::Point> find_end_points(const op::Array<float>& keyPoints);
 
     // Find what's being pointed at out in space
     std::vector<geometry_msgs::Point> extend_point (std::vector<geometry_msgs::Point> origin, int scalar); 
@@ -82,7 +69,6 @@ public:
 
     void print_rotation_trans_mat (geometry_msgs::TransformStamped transform);
     
-
 };
 
 #endif

@@ -13,8 +13,8 @@ Eigen::Matrix3f getCameraIntrinsicMatrix(float fx, float fy, float cx, float cy)
     Eigen::Matrix3f cameraIntrinsic = Eigen::Matrix3f::Identity(3, 3);
     cameraIntrinsic(0,0) = fx;
     cameraIntrinsic(1,1) = fy;
-    cameraIntrinsic(0,3) = cx;
-    cameraIntrinsic(1,3) = cy;
+    cameraIntrinsic(0,2) = cx;
+    cameraIntrinsic(1,2) = cy;
     return cameraIntrinsic;
 }
 
@@ -47,7 +47,7 @@ Eigen::MatrixXf get_2d_points(Eigen::Matrix3f cam_cal, Eigen::MatrixXf rotation_
 }
 
 /* Create the grid that holds the mapping.*/
-int ** initialize_point_grid() {
+int **initialize_point_grid() {
     int **map2to3 = (int **) malloc(sizeof(int *) * 480);
     for (int r = 0; r < 480; r++) {
         map2to3[r] = (int *) malloc(sizeof(int) * 640);

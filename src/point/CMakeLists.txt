@@ -5,9 +5,9 @@ project(point)
 #add_compile_options(-std=c++11 -g)
 add_compile_options(-std=c++11)
 
-set(OpenPose_DIR /home/users/ljernigan/openpose)
-set(OpenPose_INCLUDE_DIRS ${OpenPose_DIR}/include)
-set(OpenPose_LINK_LIBRARY ${OpenPose_DIR}/build/src/openpose/libopenpose.so)
+#set(OpenPose_DIR /home/users/ljernigan/openpose)
+#set(OpenPose_INCLUDE_DIRS ${OpenPose_DIR}/include)
+#set(OpenPose_LINK_LIBRARY ${OpenPose_DIR}/build/src/openpose/libopenpose.so)
 set (EIGEN3_INCLUDE_DIR = /usr/include/eigen3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -21,6 +21,15 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   tf2
   tf2_ros
+  
+  
+
+  rospy
+  geometry_msgs
+  
+  image_transport
+  sensor_msgs
+  visualization_msgs
 )
 
 find_package(
@@ -138,7 +147,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${OpenPose_INCLUDE_DIRS}
+  #${OpenPose_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
 )
@@ -180,7 +189,7 @@ src/Client.cpp
  target_link_libraries(${PROJECT_NAME}_node
     ${OpenCV_LIBS}   
     ${catkin_LIBRARIES}
-    ${OpenPose_LINK_LIBRARY}
+    #${OpenPose_LINK_LIBRARY}
  )
 
 
