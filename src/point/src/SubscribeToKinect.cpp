@@ -32,39 +32,6 @@
         cam_cal = getCameraIntrinsicMatrix(msg->K[0], msg->K[4], msg->K[2], msg->K[5]);
         return cam_cal;
     }
-
-    /* Adjust a x, y, depth point to reflect the camera calibration. */
-    geometry_msgs::Point SubscribeToKinect::transform_point(float x, float y, float depth_val) {
-        geometry_msgs::Point point;
-        point.x = (x + 0.5 - cam_cal(0, 2)) * cam_cal(0, 0) * depth_val;
-        point.y = (y + 0.5 - cam_cal(1, 2)) * cam_cal(1, 1) * depth_val;
-        point.z = depth_val;
-        return point;
-    }
-
-    // Find what's being pointed at out in space
-    std::vector<geometry_msgs::Point> SubscribeToKinect::extend_point (std::vector<geometry_msgs::Point> origin, int scalar) {
-        geometry_msgs::Point vec;
-        // Create vector
-        vec.x = origin[1].x - origin[0].x;
-        vec.y = origin[1].y - origin[0].y;
-        vec.z = origin[1].z - origin[0].z;
-        // Extend vector
-        geometry_msgs::Point end_vec;
-        end_vec.x = vec.x * scalar;
-        end_vec.y = vec.y * scalar;
-        end_vec.z = vec.z * scalar;
-        std::vector<geometry_msgs::Point> ret;
-        // Create end point
-        geometry_msgs::Point end_pt;
-        end_pt.x = origin[0].x + end_vec.x;
-        end_pt.y = origin[0].y + end_vec.y;
-        end_pt.z = origin[0].z + end_vec.z;
-        ret.push_back(origin[0]);
-        ret.push_back(end_pt);
-        print_points(ret);
-        return ret;
-    }
     
     /* Show points on vector in rviz. Creates a new geometry_msg::Point each time it is called. */
     void SubscribeToKinect::print_points (std::vector<geometry_msgs::Point> pts) {

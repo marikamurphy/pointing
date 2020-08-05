@@ -58,12 +58,6 @@ public:
     /* Get camera calibration values.  Adjust them and put into camera calibration matrix. */
     Eigen::Matrix3f camera_info_callback(const sensor_msgs::CameraInfo::ConstPtr &msg);
 
-    /* Adjust a x, y, depth point to reflect the camera calibration. */
-    geometry_msgs::Point transform_point(float x, float y, float depth_val);
-
-    // Find what's being pointed at out in space
-    std::vector<geometry_msgs::Point> extend_point (std::vector<geometry_msgs::Point> origin, int scalar); 
-    
     /* Show points on vector in rviz. Creates a new geometry_msg::Point each time it is called. */
     void print_points (std::vector<geometry_msgs::Point> pts);
 

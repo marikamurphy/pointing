@@ -1,6 +1,7 @@
 #ifndef PROJECTIVE_UTIL_H
 #define PROJECTIVE_UTIL_H
 
+//#include "SubscribeToKinect.h"
 
 #include <cv_bridge/cv_bridge.h>
 #include <eigen3/Eigen/Dense>
@@ -24,10 +25,18 @@ extern void calculate_3D_coords();
 extern int ** initialize_point_grid();
 /* Given a pixel in the form x, y, return the 3D value corresponding to that location. */
 extern geometry_msgs::Point get_3d_point(int x, int y);
+
 /* Take the values of raw_2d_points and put them into a grid.
  * To retrieve a point of a pixel <x, y>, grab the index at <x, y> and 
  * index into raw_3d_points. 
  */
 extern void build2Dto3DMap(Eigen::MatrixXf raw_2d_points, int **map2to3);
+
+/* Adjust a x, y, depth point to reflect the camera calibration. */
+extern geometry_msgs::Point transform_point(float x, float y, float depth_val);
+
+// Find what's being pointed at out in space
+extern std::vector<geometry_msgs::Point> extend_point (std::vector<geometry_msgs::Point> origin, int scalar); 
+    
 
 #endif
