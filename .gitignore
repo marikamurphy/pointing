@@ -3,7 +3,7 @@ devel
 logs
 .catkin_tools
 .vscode
+.cmake
 CMakeFiles
 CMakeCache.txt
-.cmake
 src/point_interpretation/point_interpretation

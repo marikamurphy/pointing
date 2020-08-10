@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unistd.h>
  
+#define MAXNUM 999999 
 using namespace cv;
 using namespace Eigen;
 using namespace std;
@@ -137,35 +138,25 @@ MatrixXd extendArm(MatrixXd arm, int scale){
     return extendedArm;
 }
 
-Vector2d intersectionOfTwoLines(Vector2d A, Vector2d B, Vector2d C, Vector2d D) { 
-    Vector2d intersection();
-    // Line AB represented as a1x + b1y = c1 
-    double a1 = B(1) - A(1); 
-    double b1 = A(0) - B(0); 
-    double c1 = a1*(A(0)) + b1*(A(1)); 
-    
-    // Line CD represented as a2x + b2y = c2 
-    double a2 = D(1) - C(1); 
-    double b2 = C(0) - D(0); 
-    double c2 = a2*(C(0))+ b2*(C(1)); 
-    
-    double determinant = a1*b2 - a2*b1; 
-    
-    if (determinant == 0) 
-    { 
-        // The lines are parallel. This is simplified 
-        // by returning a pair of FLT_MAX 
-        intersection(0) = Double.MAX_VALUE;
-        intersection(1) = Double.MAX_VALUE;
-        return intersection; 
-    } 
-    else
-    { 
-        intersection(0) = (b2*c1 - b1*c2)/determinant; 
-        intersection(1) = (a1*c2 - a2*c1)/determinant; 
-        return intersection; 
-    } 
-} 
+
+
+MatrixXd findIntercepts(MatrixXd arm_in_2d) {
+    MatrixXd intercepts(2, 4);
+    double m = (arm_in_2d(0, 0) - arm_in_2d(0, 1)) / (arm_in_2d(1, 0) - arm_in_2d(1, 1));
+    // left
+    intercepts(0, 0) = 0;
+    intercepts(1, 0) = -m * arm_in_2d(0, 1) + arm_in_2d(1, 1);
+    // top
+    intercepts(0, 1) = -arm_in_2d(1, 1) / m + arm_in_2d(0, 1);
+    intercepts(1, 1) = 0;
+    // right
+    intercepts(0, 2) = 640;
+    intercepts(1, 2) = m * (640 - arm_in_2d(0, 1)) + arm_in_2d(1, 1);
+    // bottom
+    intercepts(0, 3) = (480 - arm_in_2d(1, 1)) / m + arm_in_2d(0, 1);
+    intercepts(1, 3) = 480;
+    return intercepts;
+}
 
 int main(int argc, char **argv) {
     //MatrixXd point_hom = simpleCube(5);
@@ -188,28 +179,18 @@ int main(int argc, char **argv) {
 
         MatrixXd new_arm = camera_projective_matrix * arm;
         MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
-
-        Mat out_image = Mat::zeros(480, 640, CV_8UC3);
-        int green_rgb[3] = {0, 255, 0};
         MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
-        double m = (arm_in_2d(0, 0) - arm_in_2d(0, 1)) / (arm_in_2d(1, 0) - arm_in_2d(1, 1));
-        
-        double x_left = -arm_in_2d(1, 1) / m + arm_in_2d(0, 1); // 
-        double y_top = -m * arm_in_2d(0, 1) + arm_in_2d(1, 1);
-        double x_right = (480 - arm_in_2d(1, 1)) / m + arm_in_2d(0, 1);
-        double y_bottom = m * (640 - arm_in_2d(0, 1)) + arm_in_2d(1, 1);
-        // y1 - y = dy/dx(x1 - x)
+        MatrixXd intercepts = findIntercepts(arm_in_2d);
+        Mat out_image = Mat::zeros(480, 640, CV_8UC3);
+        int red_rgb[3] = {0, 0, 255};
+        renderCrosshair(intercepts, out_image, red_rgb);
+        int green_rgb[3] = {0, 255, 0};
         renderCrosshair(arm_in_2d, out_image, green_rgb);
-        int red_rgb[3] = {255, 0, 0};
-        renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, red_rgb);
+        int blue_rgb[3] = {255, 0, 0};
+        renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
 
         imshow("out_image", out_image);
-        //usleep(50);
-        waitKey(2);
-        // key = waitKey(100);
-        // if(key == 27){
-        //     break;
-        // }
+        waitKey(1);
     }
 
     return 0;
