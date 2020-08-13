@@ -7,3 +7,6 @@ logs
 CMakeFiles
 CMakeCache.txt
 src/point_interpretation/point_interpretation
+pointing-env
+*.png
+src/point_interpretation/Makefile

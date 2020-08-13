@@ -64,3 +64,14 @@ while running:
    cv2.namedWindow("server")
    cv2.imshow("server", image)
    key = cv2.waitKey(30)
+
+
+   #send back coordinates in image, TODO: add in corner detection calls ect
+   d = [100,200,300,400]
+   msg = json.dumps(d)
+   msg = bytes(f"{len(msg):<{HEADERSIZE}}"+msg, "utf-8")
+   # send a thank you message to the client.  
+   c.send(msg)
+  
+   # Close the connection with the client 
+   c.close()
