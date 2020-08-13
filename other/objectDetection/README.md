@@ -1,4 +1,4 @@
-#Set up the Virtual Env
+# Set up the Virtual Env
 
 python3 -m venv /path/to/new/virtual/environment
 
@@ -12,7 +12,7 @@ pip install torch torchvision
 
 pip install -U matplotlib
 
-#Dependencies list
+# Dependencies list
 
 cycler==0.10.0
 
