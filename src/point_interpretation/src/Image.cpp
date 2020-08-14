@@ -1,28 +1,35 @@
 #include "Image.h"
 
 using namespace Eigen;
-using namespace cv
+using namespace cv;
 
 Image::Image(){
 
 }
 
-Mat Image::loadImage(string img_path){
+Mat Image::loadImage(std::string img_path){
     Mat image;
-    image = imread(img_path, CV_LOAD_IMAGE_COLOR);   // Read the file
+    image = imread(img_path);   // Read the file
     if(! image.data )                              // Check for invalid input
     {
-        cout <<  "Could not open or find the image" << std::endl ;
-        return -1;
+        std::cout <<  "Could not open or find the image" << std::endl ;
+        return image;
     }
-    namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+    //namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
     imshow( "Display window", image );                   // Show our image inside it.
 
-    waitKey(0);     
+    waitKey(0);
+    return image;     
 }
 
-MatrixXd Image::sendImage(Mat src){
-    Mat image = loadImage();
+MatrixXd Image::sendImage(std::string img_path){
+    Mat image = loadImage(img_path);
+    Client *client = new Client();
+    int sockfd = client->connection();
+    return client->sendCV(sockfd, image);
+}
+
+MatrixXd Image::sendImage(Mat image){
     Client *client = new Client();
     int sockfd = client->connection();
     return client->sendCV(sockfd, image);

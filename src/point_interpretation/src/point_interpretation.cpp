@@ -160,8 +160,9 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
 }
 
 int main(int argc, char **argv) {
-    Image::img_class = Image::Image();
-    img_class::loadImage("donut.png");
+    Image *img = new Image();
+    img->sendImage("./donut.png");
+    std::cout << "Printed" << std::endl;
     MatrixXd arm = makeArm();
     MatrixXd extendedArm = extendArm(arm, 1);
 

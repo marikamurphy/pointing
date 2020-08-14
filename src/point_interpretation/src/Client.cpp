@@ -14,6 +14,7 @@
 
 #define PORT 3211 
 #define IP "127.0.0.1"
+#define ARRLEN 256
 
 using namespace std;
 using namespace Eigen;
@@ -49,8 +50,8 @@ int Client::connection(){
         return -1;
     }
     // Server will send what connetion number this is
-    char buffer[256];
-    bzero(buffer, 256);
+    char buffer[ARRLEN];
+    bzero(buffer, ARRLEN);
     if (read(sockfd, buffer, sizeof(buffer)) < 0)
     {
         perror("ERROR reading from socket");
@@ -84,8 +85,8 @@ MatrixXd Client::sendCV(int sockfd, cv::Mat src)
     cout << "sent data" << endl;
     
     //get back coordinates
-    char buffer[256];
-    bzero(buffer, 256);
+    char buffer[ARRLEN];
+    bzero(buffer, ARRLEN);
     if (read(sockfd, buffer, sizeof(buffer)) < 0)
     {
         perror("ERROR reading from socket");
@@ -94,8 +95,28 @@ MatrixXd Client::sendCV(int sockfd, cv::Mat src)
     printf("%s\n", buffer); //TODO: we will recieve coordinates back, need to actually read these in
     return interpretBuf(buffer);
 }
-//TODO
-MatrixXd Client::interpretBuf(char *buf){
-    MatrixXd coords;
+
+//Here we place the coordinates into a MatrixXd
+MatrixXd Client::interpretBuf(char buf[ARRLEN]){
+    
+    std::vector<double> arr;
+    int i = 1;
+    while(buf[i] != ']'){
+        std::string num ="";
+        while(buf[i] != ',' && buf[i] != ']'){
+            num.push_back(buf[i]);
+            i++;
+        }
+        if(buf[i] == ',')
+            i++;
+        
+        arr.push_back(std::stoi(num));
+    }
+    int size = arr.size();
+    MatrixXd coords = MatrixXd::Zero(size/2,2);
+    for(i = 0; i < size/2; i++){
+	    coords(i, 0) = arr.at(i*2);
+	    coords(i, 1) = arr.at(i*2+1);
+    }
     return coords;
 }

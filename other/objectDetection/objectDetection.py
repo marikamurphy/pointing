@@ -30,6 +30,8 @@ def get_prediction(img_path, threshold):
 def object_detection_api(img_path, threshold=0.5, rect_th=3, text_size=3, text_th=3):
 
       boxes, pred_cls = get_prediction(img_path, threshold) # Get predictions
+      #TODO: reformat boxes into [20, ...] vs 2D array
+      print(boxes)
       return boxes
       img = cv2.imread(img_path) # Read image with cv2
       img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB

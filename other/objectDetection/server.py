@@ -66,11 +66,11 @@ while running:
    key = cv2.waitKey(30)
 
 
-   #send back coordinates in image, TODO: add in corner detection calls ect
+   #send back coordinates in image, TODO: add in call to objectDetection
    d = [100,200,300,400]
    msg = json.dumps(d)
    msg = bytes(f"{len(msg):<{HEADERSIZE}}"+msg, "utf-8")
-   # send a thank you message to the client.  
+   # send a thank you message to the client.
    c.send(msg)
   
    # Close the connection with the client 
