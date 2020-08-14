@@ -161,8 +161,7 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
 
 int main(int argc, char **argv) {
     Image *img = new Image();
-    img->sendImage("./donut.png");
-    std::cout << "Printed" << std::endl;
+    MatrixXd boxes = img->sendImage("./donut.png");
     MatrixXd arm = makeArm();
     MatrixXd extendedArm = extendArm(arm, 1);
 
@@ -172,7 +171,7 @@ int main(int argc, char **argv) {
     point_trans(2,0) = 0;
     point_trans(3,0) = 1;
 
-    namedWindow( "out_image", WINDOW_AUTOSIZE);
+    namedWindow("out_image");
     int key;
     for(double z = 0; z < 10; z+= 0.001) {
         extendedArm = extendArm(arm, z);
@@ -184,7 +183,8 @@ int main(int argc, char **argv) {
         MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
         MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
         MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
-        Mat out_image = Mat::zeros(480, 640, CV_8UC3);
+        //Mat out_image = Mat::zeros(480, 640, CV_8UC3);
+        Mat out_image = imread("./donut.png");   // Read the file
         int red_rgb[3] = {0, 0, 255};
         renderCrosshair(intercepts, out_image, red_rgb);
         int green_rgb[3] = {0, 255, 0};
@@ -192,9 +192,18 @@ int main(int argc, char **argv) {
         int blue_rgb[3] = {255, 0, 0};
         renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
 
+        Point uLeft;
+        Point bRight;
+        uLeft.x = boxes(0,0);
+        uLeft.y = boxes(0,1);
+        bRight.x = boxes(1,0);
+        bRight.y = boxes(1,1);   
+        cv::Scalar colorScalar = cv::Scalar(94, 206, 165) ;
+        rectangle(out_image, uLeft, bRight, colorScalar);
+
         imshow("out_image", out_image);
         waitKey(1);
     }
-
+    
     return 0;
 }

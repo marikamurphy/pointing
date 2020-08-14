@@ -3,6 +3,7 @@ import socket
 import json 
 import cv2
 import numpy as np
+import objectDetection
 INTSIZE = 4
 HEADERSIZE = 10
 
@@ -61,15 +62,15 @@ while running:
    
    nparr = np.fromstring(buf, np.uint8)
    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-   cv2.namedWindow("server")
-   cv2.imshow("server", image)
-   key = cv2.waitKey(30)
+#    cv2.namedWindow("server")
+#    cv2.imshow("server", image)
+#    key = cv2.waitKey(30)
 
 
    #send back coordinates in image, TODO: add in call to objectDetection
-   d = [100,200,300,400]
-   msg = json.dumps(d)
-   msg = bytes(f"{len(msg):<{HEADERSIZE}}"+msg, "utf-8")
+   boxes = objectDetection.object_detection_api(image)
+   msg = json.dumps(boxes)
+   msg = bytes(msg, "utf-8")
    # send a thank you message to the client.
    c.send(msg)
   
