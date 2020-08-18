@@ -250,7 +250,6 @@ int main(int argc, char **argv) {
         renderCrosshair(arm_in_2d, out_image, green_rgb);
         int blue_rgb[3] = {255, 0, 0};
         renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
-      
         printBoxes(out_image, boxes);
         imshow("out_image", out_image);
         waitKey(1);
