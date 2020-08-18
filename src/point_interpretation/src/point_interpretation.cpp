@@ -168,30 +168,45 @@ void printBoxes(Mat out_image, vector< Point> boxes) {
     
 }
 
+vector<int> insideBox (vector<Point> boxes, Point cor){
+    vector<int> ret;
+    for(int i = 0; i < boxes.size(); i +=2) {
+        Point tLeft = boxes.at(i);
+        Point bRight = boxes.at(i+1);
+        /* Point must be between the two x values and the two y values. */
+        if (cor.x > tLeft.x && cor.x < bRight.x 
+        && cor.y < tLeft.y && cor.y > bRight.y) {
+            ret.push_back(i);
+        }
+    }
+    return ret;
+}
 
-// bool insideBox (MatrixXd boxes, Point cor){
-
-// }
-
-void bresenham(int x1, int y1, int x2, int y2) 
+vector<Point> bresenham(Point first, Point sec) 
 { 
-   int m_new = 2 * (y2 - y1); 
-   int slope_error_new = m_new - (x2 - x1); 
-   for (int x = x1, y = y1; x <= x2; x++) 
-   { 
-      cout << "(" << x << "," << y << ")\n"; 
-  
-      // Add slope to increment angle formed 
-      slope_error_new += m_new; 
-  
-      // Slope error reached limit, time to 
-      // increment y and update slope error. 
-      if (slope_error_new >= 0) 
-      { 
-         y++; 
-         slope_error_new  -= 2 * (x2 - x1); 
-      } 
-   } 
+    vector<Point> ret;
+    int m_new = 2 * (sec.y - first.y); 
+    int slope_error_new = m_new - (sec.x - first.x); 
+    for (int x = first.x, y = first.y; x <= sec.x; x++) 
+    { 
+        Point pixel;
+        pixel.x = x;
+        pixel.y = y;
+        ret.push_back(pixel);
+        cout << "(" << x << "," << y << ")\n"; 
+
+        // Add slope to increment angle formed 
+        slope_error_new += m_new; 
+
+        // Slope error reached limit, time to 
+        // increment y and update slope error. 
+        if (slope_error_new >= 0) 
+        { 
+            y++; 
+            slope_error_new  -= 2 * (sec.x - first.x); 
+        } 
+    }
+    return ret; 
 } 
 
 int main(int argc, char **argv) {
@@ -218,6 +233,13 @@ int main(int argc, char **argv) {
         MatrixXd new_arm = camera_projective_matrix * arm;
         MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
         MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
+        Point first;
+        first.x = arm_in_2d(0, 0);
+        first.y = arm_in_2d(1, 0);
+        Point sec;
+        sec.x = arm_in_2d(1, 0);
+        sec.y = arm_in_2d(1, 1);
+        vector<Point> bres = bresenham(first, sec);
         MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
         //Mat out_image = Mat::zeros(480, 640, CV_8UC3);
         Mat out_image = imread("./donut.png");   // Read the file
