@@ -1,4 +1,5 @@
 #include <Image.h>
+#include <vector>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -159,13 +160,43 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
     return intercepts;
 }
 
-void drawBoundingBox(){
+void printBoxes(Mat out_image, vector< Point> boxes) {
+    cv::Scalar colorScalar = cv::Scalar(94, 206, 165) ;
+    for(int i = 0; i < boxes.size(); i+=2){
+        rectangle(out_image, boxes.at(i), boxes.at(i+1), colorScalar);
+    }
     
 }
 
+
+// bool insideBox (MatrixXd boxes, Point cor){
+
+// }
+
+void bresenham(int x1, int y1, int x2, int y2) 
+{ 
+   int m_new = 2 * (y2 - y1); 
+   int slope_error_new = m_new - (x2 - x1); 
+   for (int x = x1, y = y1; x <= x2; x++) 
+   { 
+      cout << "(" << x << "," << y << ")\n"; 
+  
+      // Add slope to increment angle formed 
+      slope_error_new += m_new; 
+  
+      // Slope error reached limit, time to 
+      // increment y and update slope error. 
+      if (slope_error_new >= 0) 
+      { 
+         y++; 
+         slope_error_new  -= 2 * (x2 - x1); 
+      } 
+   } 
+} 
+
 int main(int argc, char **argv) {
     Image *img = new Image();
-    MatrixXd boxes = img->sendImage("./donut.png");
+    vector<Point> boxes = img->sendImage("./donut.png");
     MatrixXd arm = makeArm();
     MatrixXd extendedArm = extendArm(arm, 1);
 
@@ -177,6 +208,7 @@ int main(int argc, char **argv) {
 
     namedWindow("out_image");
     int key;
+
     for(double z = 0; z < 10; z+= 0.001) {
         extendedArm = extendArm(arm, z);
         
@@ -189,26 +221,15 @@ int main(int argc, char **argv) {
         MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
         //Mat out_image = Mat::zeros(480, 640, CV_8UC3);
         Mat out_image = imread("./donut.png");   // Read the file
+        printBoxes(out_image, boxes);
         int red_rgb[3] = {0, 0, 255};
         renderCrosshair(intercepts, out_image, red_rgb);
         int green_rgb[3] = {0, 255, 0};
         renderCrosshair(arm_in_2d, out_image, green_rgb);
         int blue_rgb[3] = {255, 0, 0};
         renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
-
-        Point uLeft;
-        Point bRight;
-        cv::Scalar colorScalar = cv::Scalar(94, 206, 165) ;
-
-        for (int i = 0; i < boxes.rows(); i+=2) {
-            uLeft.x = boxes(i,0);
-            uLeft.y = boxes(i,1);
-            bRight.x = boxes(i+1,0);
-            bRight.y = boxes(i+1,1);
-            rectangle(out_image, uLeft, bRight, colorScalar);
-        }
-        
-
+      
+        printBoxes(out_image, boxes);
         imshow("out_image", out_image);
         waitKey(1);
     }

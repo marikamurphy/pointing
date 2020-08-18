@@ -18,6 +18,7 @@
 
 using namespace std;
 using namespace Eigen;
+using namespace cv;
 
 
 Client::Client(){
@@ -64,10 +65,10 @@ int Client::connection(){
 } 
 
 
-MatrixXd Client::sendCV(int sockfd, cv::Mat src)
+vector<Point> Client::sendCV(int sockfd, cv::Mat src)
 {
     vector<uchar> buf;
-    MatrixXd nullp;
+    vector<Point> nullp;
     cv::imencode(".jpg", src, buf);
     // Send size first
     int len = buf.size();
@@ -97,9 +98,9 @@ MatrixXd Client::sendCV(int sockfd, cv::Mat src)
 }
 
 //Here we place the coordinates into a MatrixXd
-MatrixXd Client::interpretBuf(char buf[ARRLEN]){
+vector<Point> Client::interpretBuf(char buf[ARRLEN]){
     
-    std::vector<double> arr;
+    vector<double> arr;
     int i = 1;
     while(buf[i] != ']'){
         std::string num ="";
@@ -113,10 +114,13 @@ MatrixXd Client::interpretBuf(char buf[ARRLEN]){
         arr.push_back(std::stoi(num));
     }
     int size = arr.size();
-    MatrixXd coords = MatrixXd::Zero(size/2,2);
-    for(i = 0; i < size/2; i++){
-	    coords(i, 0) = arr.at(i*2);
-	    coords(i, 1) = arr.at(i*2+1);
+
+    vector<Point> boxDict;
+    Point pnt;
+    for (int i = 0; i < size/2; i++) {
+        pnt.x = arr.at(i*2);
+        pnt.y = arr.at(i*2+1);
+        boxDict.push_back (pnt);
     }
-    return coords;
+    return boxDict;
 }

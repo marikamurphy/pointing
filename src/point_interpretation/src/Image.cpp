@@ -22,14 +22,14 @@ Mat Image::loadImage(std::string img_path){
     return image;     
 }
 
-MatrixXd Image::sendImage(std::string img_path){
+ vector<Point> Image::sendImage(std::string img_path){
     Mat image = loadImage(img_path);
     Client *client = new Client();
     int sockfd = client->connection();
     return client->sendCV(sockfd, image);
 }
 
-MatrixXd Image::sendImage(Mat image){
+ vector<Point> Image::sendImage(Mat image){
     Client *client = new Client();
     int sockfd = client->connection();
     return client->sendCV(sockfd, image);

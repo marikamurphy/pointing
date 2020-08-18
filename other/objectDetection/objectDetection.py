@@ -43,11 +43,9 @@ def object_detection_api(img, threshold=0.5):
                                                         ]
       boxes, pred_cls = get_prediction(img, threshold, model, COCO_INSTANCE_CATEGORY_NAMES) # Get predictions
       #reformat boxes into [20, ...] vs 2D array
-      print(boxes)
       boxes = np.array(boxes)
       boxes = boxes.flatten()
       boxes = boxes.astype(int).tolist()
-      print(boxes)
       return boxes
     #   img = cv2.imread(img_path) # Read image with cv2
     #   img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB
