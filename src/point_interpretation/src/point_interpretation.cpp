@@ -159,6 +159,10 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
     return intercepts;
 }
 
+void drawBoundingBox(){
+    
+}
+
 int main(int argc, char **argv) {
     Image *img = new Image();
     MatrixXd boxes = img->sendImage("./donut.png");
@@ -194,12 +198,16 @@ int main(int argc, char **argv) {
 
         Point uLeft;
         Point bRight;
-        uLeft.x = boxes(0,0);
-        uLeft.y = boxes(0,1);
-        bRight.x = boxes(1,0);
-        bRight.y = boxes(1,1);   
         cv::Scalar colorScalar = cv::Scalar(94, 206, 165) ;
-        rectangle(out_image, uLeft, bRight, colorScalar);
+
+        for (int i = 0; i < boxes.rows(); i+=2) {
+            uLeft.x = boxes(i,0);
+            uLeft.y = boxes(i,1);
+            bRight.x = boxes(i+1,0);
+            bRight.y = boxes(i+1,1);
+            rectangle(out_image, uLeft, bRight, colorScalar);
+        }
+        
 
         imshow("out_image", out_image);
         waitKey(1);

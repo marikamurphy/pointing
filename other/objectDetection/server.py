@@ -58,13 +58,20 @@ while running:
        print("ERROR reading from socket (readCV size)")
    print("Size of image: %d\n" %(n))
 
-   buf = c.recv(n)
+    # grab until buffer is full, num received = 0, increment until expected
+   toread = n
+   buf = bytearray(toread)
+   view = memoryview(buf)
+   while toread:
+      nbytes = c.recv_into(view)
+      view = view[nbytes:] # slicing views is cheap
+      toread -= nbytes
    
-   nparr = np.fromstring(buf, np.uint8)
-   image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-#    cv2.namedWindow("server")
-#    cv2.imshow("server", image)
-#    key = cv2.waitKey(30)
+   nparr = np.fromstring(bytes(buf), np.uint8)
+   image = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+   cv2.namedWindow("server")
+   cv2.imshow("server", image)
+   key = cv2.waitKey(30)
 
 
    #send back coordinates in image, TODO: add in call to objectDetection
