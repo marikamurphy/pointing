@@ -69,9 +69,9 @@ while running:
    
    nparr = np.fromstring(bytes(buf), np.uint8)
    image = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
-   cv2.namedWindow("server")
-   cv2.imshow("server", image)
-   key = cv2.waitKey(30)
+#    cv2.namedWindow("server")
+#    cv2.imshow("server", image)
+#    key = cv2.waitKey(30)
 
 
    #send back coordinates in image, TODO: add in call to objectDetection

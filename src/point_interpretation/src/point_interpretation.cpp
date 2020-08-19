@@ -160,6 +160,32 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
     return intercepts;
 }
 
+MatrixXd findIntercept(MatrixXd arm_in_2d, int height, int width) {
+    MatrixXd intercepts(2, 2);
+    double m = (arm_in_2d(0, 0) - arm_in_2d(0, 1)) / (arm_in_2d(1, 0) - arm_in_2d(1, 1));
+    int left = -m * arm_in_2d(0, 1) + arm_in_2d(1, 1); // 0, left
+    int top = -arm_in_2d(1, 1) / m + arm_in_2d(0, 1); // top, 0
+    int right = intercepts(1, 2) = m * (width - arm_in_2d(0, 1)) + arm_in_2d(1, 1); // width, right
+    int bottom = (height - arm_in_2d(1, 1)) / m + arm_in_2d(0, 1); // bottom, height
+    //intersects the right/left side of image
+    if (left >= 0 && left <= width && right >= 0 && right <= width) {
+        // left
+        intercepts(0, 0) = 0;
+        intercepts(1, 0) = left;
+        // right
+        intercepts(0, 1) = width;
+        intercepts(1, 1) = right;
+    } else { //interscts the top/bottom of image
+        // top
+        intercepts(0, 0) = top;
+        intercepts(1, 0) = 0;
+        // bottom
+        intercepts(0, 1) = bottom;
+        intercepts(1, 1) = height;
+    }
+    return intercepts;
+}
+
 void printBoxes(Mat out_image, vector< Point> boxes) {
     cv::Scalar colorScalar = cv::Scalar(94, 206, 165) ;
     for(int i = 0; i < boxes.size(); i+=2){
@@ -184,6 +210,8 @@ vector<int> insideBox (vector<Point> boxes, Point cor){
 
 vector<Point> bresenham(Point first, Point sec) 
 { 
+    cout << "First x: " << first.x << " y: " << first.y << endl;
+    cout << "First x: " << sec.x << " y: " << sec.y << endl;
     vector<Point> ret;
     int m_new = 2 * (sec.y - first.y); 
     int slope_error_new = m_new - (sec.x - first.x); 
@@ -224,8 +252,8 @@ int main(int argc, char **argv) {
     namedWindow("out_image");
     int key;
 
-    for(double z = 0; z < 10; z+= 0.001) {
-        extendedArm = extendArm(arm, z);
+    //for(double z = 0; z < 10; z+= 0.1) {
+        extendedArm = extendArm(arm, 5);
         
         MatrixXd camera_intrinsic = computeCameraIntrinsicMatrix(304, 305, 320, 240);
         MatrixXd camera_projective_matrix = camera_intrinsic * computeIdealProjection(point_trans);
@@ -233,15 +261,16 @@ int main(int argc, char **argv) {
         MatrixXd new_arm = camera_projective_matrix * arm;
         MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
         MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
-        Point first;
-        first.x = arm_in_2d(0, 0);
-        first.y = arm_in_2d(1, 0);
-        Point sec;
-        sec.x = arm_in_2d(1, 0);
-        sec.y = arm_in_2d(1, 1);
-        vector<Point> bres = bresenham(first, sec);
+  
+        Point wrist;
+        wrist.x = arm_in_2d(0, 1);
+        wrist.y = arm_in_2d(1, 1);
+        Point elbow;
+        elbow.x = arm_in_2d(0, 0);
+        elbow.y = arm_in_2d(1, 0);
+        vector<Point> bres = bresenham(wrist, elbow);
         MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
-        //Mat out_image = Mat::zeros(480, 640, CV_8UC3);
+        //Mat out_image q= Mat::zeros(480, 640, CV_8UC3);
         Mat out_image = imread("./donut.png");   // Read the file
         printBoxes(out_image, boxes);
         int red_rgb[3] = {0, 0, 255};
@@ -252,8 +281,8 @@ int main(int argc, char **argv) {
         renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
         printBoxes(out_image, boxes);
         imshow("out_image", out_image);
-        waitKey(1);
-    }
+        waitKey(0);
+    //}
     
     return 0;
 }
