@@ -87,7 +87,7 @@ MatrixXd extendArm(MatrixXd arm, int scale){
 }
 
 
-MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
+MatrixXd findIntercept(MatrixXd arm_in_2d, int height, int width) {
     MatrixXd intercepts(2, 4);
     double m = (arm_in_2d(0, 0) - arm_in_2d(0, 1)) / (arm_in_2d(1, 0) - arm_in_2d(1, 1));
     // left
@@ -105,15 +105,15 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
     return intercepts;
 }
 
-MatrixXd findIntercept(MatrixXd arm_in_2d, int height, int width) {
+MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
     MatrixXd intercepts(2, 2);
     double m = (arm_in_2d(0, 0) - arm_in_2d(0, 1)) / (arm_in_2d(1, 0) - arm_in_2d(1, 1));
     int left = -m * arm_in_2d(0, 1) + arm_in_2d(1, 1); // 0, left
     int top = -arm_in_2d(1, 1) / m + arm_in_2d(0, 1); // top, 0
-    int right = intercepts(1, 2) = m * (width - arm_in_2d(0, 1)) + arm_in_2d(1, 1); // width, right
+    int right = m * (width - arm_in_2d(0, 1)) + arm_in_2d(1, 1); // width, right
     int bottom = (height - arm_in_2d(1, 1)) / m + arm_in_2d(0, 1); // bottom, height
     //intersects the right/left side of image
-    if (left >= 0 && left <= width && right >= 0 && right <= width) {
+    if (left >= 0 && left <= height && right >= 0 && right <= height) {
         // left
         intercepts(0, 0) = 0;
         intercepts(1, 0) = left;
@@ -153,35 +153,80 @@ vector<int> insideBox (vector<Point> boxes, Point cor){
     return ret;
 }
 
+// We always go from first to second
 vector<Point> bresenham(Point first, Point sec) 
 { 
+    int dx = 1;
+    int dy = 1;
     // Code to make it go either way
-    cout << "First x: " << first.x << " y: " << first.y << endl;
-    cout << "First x: " << sec.x << " y: " << sec.y << endl;
+    // Are we going left or right?
+    if (first.x > sec.x) {
+        // We're going 
+        dx = -1; 
+    }
+    if(first.y > sec.y){
+        dy = -1;
+    }
     vector<Point> ret;
     int m_new = 2 * (sec.y - first.y); 
     int slope_error_new = m_new - (sec.x - first.x); 
-    for (int x = first.x, y = first.y; x <= sec.x; x++) 
+    int x = first.x;
+    int y = first.y;
+    while (x != sec.x)
     {
         Point pixel;
         pixel.x = x;
         pixel.y = y;
         ret.push_back(pixel);
         cout << "(" << x << "," << y << ")\n"; 
-
         // Add slope to increment angle formed 
         slope_error_new += m_new; 
-
         // Slope error reached limit, time to 
         // increment y and update slope error. 
         if (slope_error_new >= 0) 
         { 
-            y++; 
+            y+=dy; 
             slope_error_new  -= 2 * (sec.x - first.x); 
-        } 
+        }
+        x+=dx; 
     }
     return ret; 
 } 
+
+Point findEndpoint (MatrixXd arm_in_2d) {
+    // Create wrist and elbow as cv points so they can be used in bresenham
+    Point wrist(arm_in_2d(0, 1), arm_in_2d(1, 1));
+    Point elbow(arm_in_2d(0, 0), arm_in_2d(1, 0));
+    Point myIntercept;
+    MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
+    /* If the X coordinate of the first point is 0, then it's at the top.
+     * That means we are looking at the top and bottom pair.
+     */
+    if (intercepts(0, 0) == 0) {
+        // Intercepts on the left and right
+        if (wrist.x < elbow.x) {
+            // Left
+            myIntercept.x = intercepts(0, 0);
+            myIntercept.y = intercepts(1, 0);
+        } else {
+            // Right
+            myIntercept.x = intercepts(0, 1);
+            myIntercept.y = intercepts(1, 1);
+        }
+    } else {
+        // Intercepts on the top and bottom
+        if (wrist.y < elbow.y) {
+            // Top
+            myIntercept.x = intercepts(0, 0);
+            myIntercept.y = intercepts(1, 0);
+        } else {
+            // Bottom
+            myIntercept.x = intercepts(0, 1);
+            myIntercept.y = intercepts(1, 1);
+        }
+    }
+    return myIntercept;
+}
 
 int main(int argc, char **argv) {
     Image *img = new Image();
@@ -190,32 +235,28 @@ int main(int argc, char **argv) {
     vector<Point> boxes = img->sendImage("./donut.png");
     MatrixXd arm = makeArm();
     MatrixXd extendedArm = extendArm(arm, 5);
-
+    // Create tranlation point
     MatrixXd point_trans(4,1);
     point_trans(0,0) = 0;
     point_trans(1,0) = 0;
     point_trans(2,0) = 0;
     point_trans(3,0) = 1;
-
+    // Create matrices for projecting into 2d
     namedWindow("out_image");    
     MatrixXd camera_intrinsic = computeCameraIntrinsicMatrix(304, 305, 320, 240);
     MatrixXd camera_projective_matrix = camera_intrinsic * computeIdealProjection(point_trans);
-
+    // Project into 2D
     MatrixXd new_arm = camera_projective_matrix * arm;
     MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
     MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
-
-    // Create wrist and elbow as cv points so they can be used in bresenham
+    Point endpoint = findEndpoint(arm_in_2d);
     Point wrist(arm_in_2d(0, 1), arm_in_2d(1, 1));
-    Point elbow(arm_in_2d(0, 0), arm_in_2d(1, 0));
-
-    vector<Point> bres = bresenham(wrist, elbow);
-    MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
+    vector<Point> bres = bresenham(wrist, endpoint);
     //Mat out_image q= Mat::zeros(480, 640, CV_8UC3);
     Mat out_image = imread("./donut.png");   // Read the file
     printBoxes(out_image, boxes);
     int red_rgb[3] = {0, 0, 255};
-    renderCrosshair(intercepts, out_image, red_rgb);
+    renderCrosshair(endpoint.x, endpoint.y, out_image, red_rgb);
     int green_rgb[3] = {0, 255, 0};
     renderCrosshair(arm_in_2d, out_image, green_rgb);
     int blue_rgb[3] = {255, 0, 0};
