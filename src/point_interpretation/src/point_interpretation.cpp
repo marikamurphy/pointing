@@ -60,60 +60,6 @@ void renderCrosshair(MatrixXd in_pts, cv::Mat &in_mat, int rgb[]) {
         renderCrosshair(in_pts(0,i), in_pts(1,i), in_mat, rgb);
 }
 
-MatrixXd simpleCube(double half_width) {
-    int ctr = 0;
-    MatrixXd point_hom(4,8);
-
-    point_hom(0,ctr) = -half_width;
-    point_hom(1,ctr) = -half_width;
-    point_hom(2,ctr) = -half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    point_hom(0,ctr) = -half_width;
-    point_hom(1,ctr) = half_width;
-    point_hom(2,ctr) = -half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    point_hom(0,ctr) = half_width;
-    point_hom(1,ctr) = -half_width;
-    point_hom(2,ctr) = -half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    point_hom(0,ctr) = half_width;
-    point_hom(1,ctr) = half_width;
-    point_hom(2,ctr) = -half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    point_hom(0,ctr) = -half_width;
-    point_hom(1,ctr) = -half_width;
-    point_hom(2,ctr) = half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    point_hom(0,ctr) = -half_width;
-    point_hom(1,ctr) = half_width;
-    point_hom(2,ctr) = half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    point_hom(0,ctr) = half_width;
-    point_hom(1,ctr) = -half_width;
-    point_hom(2,ctr) = half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    point_hom(0,ctr) = half_width;
-    point_hom(1,ctr) = half_width;
-    point_hom(2,ctr) = half_width;
-    point_hom(3,ctr) = 1;
-    ctr++;
-
-    return point_hom;
-}
 
 MatrixXd makeArm() {
     MatrixXd arm(4, 2);
@@ -139,7 +85,6 @@ MatrixXd extendArm(MatrixXd arm, int scale){
     extendedArm(3, 1) = 1;
     return extendedArm;
 }
-
 
 
 MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
@@ -210,13 +155,14 @@ vector<int> insideBox (vector<Point> boxes, Point cor){
 
 vector<Point> bresenham(Point first, Point sec) 
 { 
+    // Code to make it go either way
     cout << "First x: " << first.x << " y: " << first.y << endl;
     cout << "First x: " << sec.x << " y: " << sec.y << endl;
     vector<Point> ret;
     int m_new = 2 * (sec.y - first.y); 
     int slope_error_new = m_new - (sec.x - first.x); 
     for (int x = first.x, y = first.y; x <= sec.x; x++) 
-    { 
+    {
         Point pixel;
         pixel.x = x;
         pixel.y = y;
@@ -239,9 +185,11 @@ vector<Point> bresenham(Point first, Point sec)
 
 int main(int argc, char **argv) {
     Image *img = new Image();
+    /* Send image will load the image and use the client server 
+     * it to python for object recognition. */
     vector<Point> boxes = img->sendImage("./donut.png");
     MatrixXd arm = makeArm();
-    MatrixXd extendedArm = extendArm(arm, 1);
+    MatrixXd extendedArm = extendArm(arm, 5);
 
     MatrixXd point_trans(4,1);
     point_trans(0,0) = 0;
@@ -249,40 +197,32 @@ int main(int argc, char **argv) {
     point_trans(2,0) = 0;
     point_trans(3,0) = 1;
 
-    namedWindow("out_image");
-    int key;
+    namedWindow("out_image");    
+    MatrixXd camera_intrinsic = computeCameraIntrinsicMatrix(304, 305, 320, 240);
+    MatrixXd camera_projective_matrix = camera_intrinsic * computeIdealProjection(point_trans);
 
-    //for(double z = 0; z < 10; z+= 0.1) {
-        extendedArm = extendArm(arm, 5);
-        
-        MatrixXd camera_intrinsic = computeCameraIntrinsicMatrix(304, 305, 320, 240);
-        MatrixXd camera_projective_matrix = camera_intrinsic * computeIdealProjection(point_trans);
+    MatrixXd new_arm = camera_projective_matrix * arm;
+    MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
+    MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
 
-        MatrixXd new_arm = camera_projective_matrix * arm;
-        MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
-        MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
-  
-        Point wrist;
-        wrist.x = arm_in_2d(0, 1);
-        wrist.y = arm_in_2d(1, 1);
-        Point elbow;
-        elbow.x = arm_in_2d(0, 0);
-        elbow.y = arm_in_2d(1, 0);
-        vector<Point> bres = bresenham(wrist, elbow);
-        MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
-        //Mat out_image q= Mat::zeros(480, 640, CV_8UC3);
-        Mat out_image = imread("./donut.png");   // Read the file
-        printBoxes(out_image, boxes);
-        int red_rgb[3] = {0, 0, 255};
-        renderCrosshair(intercepts, out_image, red_rgb);
-        int green_rgb[3] = {0, 255, 0};
-        renderCrosshair(arm_in_2d, out_image, green_rgb);
-        int blue_rgb[3] = {255, 0, 0};
-        renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
-        printBoxes(out_image, boxes);
-        imshow("out_image", out_image);
-        waitKey(0);
-    //}
+    // Create wrist and elbow as cv points so they can be used in bresenham
+    Point wrist(arm_in_2d(0, 1), arm_in_2d(1, 1));
+    Point elbow(arm_in_2d(0, 0), arm_in_2d(1, 0));
+
+    vector<Point> bres = bresenham(wrist, elbow);
+    MatrixXd intercepts = findIntercepts(arm_in_2d, 480, 640);
+    //Mat out_image q= Mat::zeros(480, 640, CV_8UC3);
+    Mat out_image = imread("./donut.png");   // Read the file
+    printBoxes(out_image, boxes);
+    int red_rgb[3] = {0, 0, 255};
+    renderCrosshair(intercepts, out_image, red_rgb);
+    int green_rgb[3] = {0, 255, 0};
+    renderCrosshair(arm_in_2d, out_image, green_rgb);
+    int blue_rgb[3] = {255, 0, 0};
+    renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
+    printBoxes(out_image, boxes);
+    imshow("out_image", out_image);
+    waitKey(0);
     
     return 0;
 }
