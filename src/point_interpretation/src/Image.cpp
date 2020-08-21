@@ -16,9 +16,9 @@ Mat Image::loadImage(std::string img_path){
         return image;
     }
     //namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
-    imshow( "Display window", image );                   // Show our image inside it.
+    //imshow( "Display window", image );                   // Show our image inside it.
 
-    waitKey(0);
+    //waitKey(0);
     return image;     
 }
 

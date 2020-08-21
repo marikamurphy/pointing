@@ -42,22 +42,22 @@ def object_detection_api(img, threshold=0.5):
                                                         'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
                                                         ]
       boxes, pred_cls = get_prediction(img, threshold, model, COCO_INSTANCE_CATEGORY_NAMES) # Get predictions
+      
+      img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB
+      for i in range(len(boxes)):
+            cv2.rectangle(img, boxes[i][0], boxes[i][1],color=(0, 255, 0), thickness=2) # Draw Rectangle with the coordinates
+            cv2.putText(img,pred_cls[i], boxes[i][0],  cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0),thickness=2) # Write the prediction class
+      #TODO: return the image with the rectangles to compare with line
+      plt.figure(figsize=(20,30)) # display the output image
+      plt.imshow(img)
+      plt.xticks([])
+      plt.yticks([])
+      plt.show()
       #reformat boxes into [20, ...] vs 2D array
       boxes = np.array(boxes)
       boxes = boxes.flatten()
       boxes = boxes.astype(int).tolist()
       return boxes
-    #   img = cv2.imread(img_path) # Read image with cv2
-    #   img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB
-    #   for i in range(len(boxes)):
-    #         cv2.rectangle(img, boxes[i][0], boxes[i][1],color=(0, 255, 0), thickness=rect_th) # Draw Rectangle with the coordinates
-    #         cv2.putText(img,pred_cls[i], boxes[i][0],  cv2.FONT_HERSHEY_SIMPLEX, text_size, (0,255,0),thickness=text_th) # Write the prediction class
-    #   #TODO: return the image with the rectangles to compare with line
-    #   plt.figure(figsize=(20,30)) # display the output image
-    #   plt.imshow(img)
-    #   plt.xticks([])
-    #   plt.yticks([])
-    #   plt.show()
 
 # torch.cuda.is_available();
 

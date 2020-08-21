@@ -69,9 +69,9 @@ void renderCrosshair(MatrixXd in_pts, cv::Mat &in_mat, int rgb[]) {
         renderCrosshair(in_pts(0,i), in_pts(1,i), in_mat, rgb);
 }
 
-void renderVector(vector<Point> vec, Mat &in_mat, int rgb){
+void renderVector(vector<Point> vec, Mat &in_mat, int rgb[]){
     for(int i = 0; i < vec.size(); i++){
-        circle(in_mat, vec.at(i), 2, Scalar(rgb[0],rgb[1],rgb[2]), -1);
+        circle(in_mat, vec.at(i), 1, Scalar(rgb[0],rgb[1],rgb[2]), -1);
     }
 }
 
@@ -91,6 +91,7 @@ MatrixXd makeArm() {
     return arm;
 }
 
+/* */
 MatrixXd extendArm(MatrixXd arm, int scale){
     MatrixXd extendedArm(4, 2);
     extendedArm.col(0) = arm.col(0);
@@ -101,6 +102,7 @@ MatrixXd extendArm(MatrixXd arm, int scale){
     return extendedArm;
 }
 
+/* Find the two intercepts of the line that are on screen. */
 MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
     MatrixXd intercepts(2, 2);
     double m = (arm_in_2d(0, 0) - arm_in_2d(0, 1)) / (arm_in_2d(1, 0) - arm_in_2d(1, 1));
@@ -127,6 +129,7 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
     return intercepts;
 }
 
+/* Show the boxes on the cv image. */
 void printBoxes(Mat out_image, vector< Point> boxes) {
     cv::Scalar colorScalar = cv::Scalar(94, 206, 165) ;
     for(int i = 0; i < boxes.size(); i+=2){
@@ -135,6 +138,7 @@ void printBoxes(Mat out_image, vector< Point> boxes) {
     
 }
 
+/* Check if a point is inside a box and which boxes. */
 vector<int> insideBox (vector<Point> boxes, Point cor){
     vector<int> ret;
     for(int i = 0; i < boxes.size(); i +=2) {
@@ -149,7 +153,7 @@ vector<int> insideBox (vector<Point> boxes, Point cor){
     return ret;
 }
 
-// Go from first to second
+/* Get the pixels of a line going from first to second. */
 vector<Point> bresenham(Point first, Point sec) 
 { 
     int dx = 1;
@@ -179,7 +183,7 @@ vector<Point> bresenham(Point first, Point sec)
         slope_error_new += m_new; 
         // Slope error reached limit, time to 
         // increment y and update slope error. 
-        if (slope_error_new >= 0) 
+        if (slope_error_new * dy >= 0) 
         { 
             y+=dy; 
             slope_error_new  -= 2 * (sec.x - first.x); 
@@ -189,6 +193,7 @@ vector<Point> bresenham(Point first, Point sec)
     return ret; 
 } 
 
+/* Decide which intercept is the endpoint based on the direction of the arm. */
 Point findEndpoint (MatrixXd arm_in_2d) {
     // Create wrist and elbow as cv points so they can be used in bresenham
     Point wrist(arm_in_2d(0, 1), arm_in_2d(1, 1));
@@ -246,7 +251,7 @@ int main(int argc, char **argv) {
     MatrixXd new_extended_arm = camera_projective_matrix * extendedArm;
     MatrixXd arm_in_2d = computeCartesianFromHomogeneous(new_arm);
     Point endpoint = findEndpoint(arm_in_2d);
-    Point wrist(arm_in_2d(0, 1), arm_in_2d(1, 1));
+    Point wrist(arm_in_2d(0, 0), arm_in_2d(1, 0));
     vector<Point> bres = bresenham(wrist, endpoint);
     //Mat out_image q= Mat::zeros(480, 640, CV_8UC3);
     Mat out_image = imread("./donut.png");   // Read the file
@@ -261,6 +266,5 @@ int main(int argc, char **argv) {
     renderVector(bres, out_image, green_rgb);
     imshow("out_image", out_image);
     waitKey(0);
-    
     return 0;
 }
