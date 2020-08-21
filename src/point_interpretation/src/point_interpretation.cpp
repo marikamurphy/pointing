@@ -12,7 +12,9 @@ using namespace cv;
 using namespace Eigen;
 using namespace std;
 
- MatrixXd computeCameraIntrinsicMatrix(double alpha, double beta, double u0, double v0) {
+/* Creates the camera intrinsic matrix in an eigen matrix given parameters.
+ * Alpha and beta are the focal length.  u0 and v0 are the principle point. */
+MatrixXd computeCameraIntrinsicMatrix(double alpha, double beta, double u0, double v0) {
     MatrixXd camera_intrinsic = MatrixXd::Zero(3,3);
     camera_intrinsic(0,0) = alpha;
     camera_intrinsic(1,1) = beta;
@@ -20,26 +22,32 @@ using namespace std;
     camera_intrinsic(1,2) = v0;
     camera_intrinsic(2,2) = 1;
     return camera_intrinsic;
- }
+}
 
- MatrixXd computeIdentityIdealProjection() {
+/* Creates the matrix used to project from 3d to 2d.
+ * It's similar to the identity matrix, but it has an extra column of 0s. */
+MatrixXd computeIdentityIdealProjection() {
     MatrixXd ideal_proj = MatrixXd::Zero(3,4);
     for(int i = 0; i < 3; i++)
         ideal_proj(i,i) = 1;
     return ideal_proj;
- }
+}
 
- MatrixXd computeIdealProjection(MatrixXd translation) {
+/* Takes a translation into account for an ideal_projection. This is how the camera has
+ * moved between the two views, 2d and 3d.*/
+MatrixXd computeIdealProjection(MatrixXd translation) {
     MatrixXd ideal_proj = MatrixXd::Zero(3,4);
+    // Set rotation portion.
     for(int i = 0; i < 3; i++)
         ideal_proj(i,i) = 1;
-
+    // Set translation portion.
     for(int i = 0; i < 3; i++)
         ideal_proj(i,3) = (translation(i, 0) / translation(3, 0));
 
     return ideal_proj;
- }
+}
 
+/* Transforms in_mat from homogenous coordinates to cartesian */
 MatrixXd computeCartesianFromHomogeneous(MatrixXd in_mat) {
     MatrixXd cart_point(in_mat.rows() - 1, in_mat.cols());
     for(int row = 0; row < in_mat.rows() - 1; row++) {
@@ -50,6 +58,7 @@ MatrixXd computeCartesianFromHomogeneous(MatrixXd in_mat) {
     return cart_point;
 }
 
+/* draws cross at x,y on given cv image mat */
 void renderCrosshair(int x, int y, cv::Mat &in_mat, int rgb[]) {
     line(in_mat, Point(x - 5,y), Point(x+5,y), Scalar(rgb[0],rgb[1],rgb[2]));
     line(in_mat, Point(x,y-5), Point(x,y+5), Scalar(rgb[0],rgb[1],rgb[2]));
@@ -60,7 +69,13 @@ void renderCrosshair(MatrixXd in_pts, cv::Mat &in_mat, int rgb[]) {
         renderCrosshair(in_pts(0,i), in_pts(1,i), in_mat, rgb);
 }
 
+void renderVector(vector<Point> vec, Mat &in_mat, int rgb){
+    for(int i = 0; i < vec.size(); i++){
+        circle(in_mat, vec.at(i), 2, Scalar(rgb[0],rgb[1],rgb[2]), -1);
+    }
+}
 
+/* creates arbitrary arm coordinate, will be replaced by openpose eventually */
 MatrixXd makeArm() {
     MatrixXd arm(4, 2);
     // Elbow
@@ -84,25 +99,6 @@ MatrixXd extendArm(MatrixXd arm, int scale){
     extendedArm(2, 1) = arm(2,1) + scale * (arm(2,1) - arm(2,0));
     extendedArm(3, 1) = 1;
     return extendedArm;
-}
-
-
-MatrixXd findIntercept(MatrixXd arm_in_2d, int height, int width) {
-    MatrixXd intercepts(2, 4);
-    double m = (arm_in_2d(0, 0) - arm_in_2d(0, 1)) / (arm_in_2d(1, 0) - arm_in_2d(1, 1));
-    // left
-    intercepts(0, 0) = 0;
-    intercepts(1, 0) = -m * arm_in_2d(0, 1) + arm_in_2d(1, 1);
-    // top
-    intercepts(0, 1) = -arm_in_2d(1, 1) / m + arm_in_2d(0, 1);
-    intercepts(1, 1) = 0;
-    // right
-    intercepts(0, 2) = width;
-    intercepts(1, 2) = m * (width - arm_in_2d(0, 1)) + arm_in_2d(1, 1);
-    // bottom
-    intercepts(0, 3) = (height - arm_in_2d(1, 1)) / m + arm_in_2d(0, 1);
-    intercepts(1, 3) = height;
-    return intercepts;
 }
 
 MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
@@ -153,7 +149,7 @@ vector<int> insideBox (vector<Point> boxes, Point cor){
     return ret;
 }
 
-// We always go from first to second
+// Go from first to second
 vector<Point> bresenham(Point first, Point sec) 
 { 
     int dx = 1;
@@ -262,6 +258,7 @@ int main(int argc, char **argv) {
     int blue_rgb[3] = {255, 0, 0};
     renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
     printBoxes(out_image, boxes);
+    renderVector(bres, out_image, green_rgb);
     imshow("out_image", out_image);
     waitKey(0);
     
