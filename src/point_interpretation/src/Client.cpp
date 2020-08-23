@@ -173,9 +173,11 @@ vector<string> Client::interpretLabels(char buf[LABELLEN]){
     while(buf[i] != ']'){
         std::string label ="";
         while(buf[i] != ',' && buf[i] != ']'){
-            label.push_back(buf[i]);
+            if(buf[i] != '\"')
+                label.push_back(buf[i]);
             i++;
         }
+
         if(buf[i] == ',')
             i++;
         
