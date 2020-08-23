@@ -1,4 +1,4 @@
-#include <Image.h>
+#include <Client.h>
 #include <vector>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -130,10 +130,11 @@ MatrixXd findIntercepts(MatrixXd arm_in_2d, int height, int width) {
 }
 
 /* Show the boxes on the cv image. */
-void printBoxes(Mat out_image, vector< Point> boxes) {
+void printBoxes(Mat out_image, vector< Point> boxes, vector<string> labels) {
     cv::Scalar colorScalar = cv::Scalar(94, 206, 165) ;
     for(int i = 0; i < boxes.size(); i+=2){
         rectangle(out_image, boxes.at(i), boxes.at(i+1), colorScalar);
+        putText(out_image, labels.at(i/2), boxes.at(i), FONT_HERSHEY_SIMPLEX, 1, colorScalar);
     }
     
 }
@@ -145,8 +146,9 @@ vector<int> insideBox (vector<Point> boxes, Point cor){
         Point tLeft = boxes.at(i);
         Point bRight = boxes.at(i+1);
         /* Point must be between the two x values and the two y values. */
-        if (cor.x > tLeft.x && cor.x < bRight.x 
-        && cor.y < tLeft.y && cor.y > bRight.y) {
+        if (cor.x >= tLeft.x && cor.x <= bRight.x 
+        && cor.y >= tLeft.y && cor.y <= bRight.y) {
+            cout << "inside box: " << cor.x << " " << cor.y << endl;
             ret.push_back(i);
         }
     }
@@ -230,10 +232,12 @@ Point findEndpoint (MatrixXd arm_in_2d) {
 }
 
 int main(int argc, char **argv) {
-    Image *img = new Image();
+    Client *client = new Client();
     /* Send image will load the image and use the client server 
      * it to python for object recognition. */
-    vector<Point> boxes = img->sendImage("./donut.png");
+    client->sendImage("./donut.png");
+    vector<Point> boxes = client->getBoxes();
+    vector<string> labels = client->getLabels();
     MatrixXd arm = makeArm();
     MatrixXd extendedArm = extendArm(arm, 5);
     // Create tranlation point
@@ -255,14 +259,19 @@ int main(int argc, char **argv) {
     vector<Point> bres = bresenham(wrist, endpoint);
     //Mat out_image q= Mat::zeros(480, 640, CV_8UC3);
     Mat out_image = imread("./donut.png");   // Read the file
-    printBoxes(out_image, boxes);
+    printBoxes(out_image, boxes, labels);
     int red_rgb[3] = {0, 0, 255};
+    for (Point p : bres) {
+        vector<int> matchingBoxes = insideBox(boxes, p);
+        if (matchingBoxes.size() != 0) {
+            renderCrosshair(p.x, p.y, out_image, red_rgb);
+        }
+    }
     renderCrosshair(endpoint.x, endpoint.y, out_image, red_rgb);
     int green_rgb[3] = {0, 255, 0};
     renderCrosshair(arm_in_2d, out_image, green_rgb);
     int blue_rgb[3] = {255, 0, 0};
     renderCrosshair(computeCartesianFromHomogeneous(new_extended_arm), out_image, blue_rgb);
-    printBoxes(out_image, boxes);
     renderVector(bres, out_image, green_rgb);
     imshow("out_image", out_image);
     waitKey(0);

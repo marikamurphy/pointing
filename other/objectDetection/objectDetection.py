@@ -57,7 +57,7 @@ def object_detection_api(img, threshold=0.5):
       boxes = np.array(boxes)
       boxes = boxes.flatten()
       boxes = boxes.astype(int).tolist()
-      return boxes
+      return boxes, pred_cls
 
 # torch.cuda.is_available();
 

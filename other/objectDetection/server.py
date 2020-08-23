@@ -74,12 +74,14 @@ while running:
 #    key = cv2.waitKey(30)
 
 
-   #send back coordinates in image, TODO: add in call to objectDetection
-   boxes = objectDetection.object_detection_api(image)
+   #send back coordinates in image
+   boxes, pred_cls = objectDetection.object_detection_api(image)
    msg = json.dumps(boxes)
    msg = bytes(msg, "utf-8")
-   # send a thank you message to the client.
    c.send(msg)
-  
+   #send back labels
+   msg = json.dumps(pred_cls)
+   msg = bytes(msg, "utf-8")
+   c.send(msg)
    # Close the connection with the client 
    c.close()

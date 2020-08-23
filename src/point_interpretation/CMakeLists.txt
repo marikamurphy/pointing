@@ -19,7 +19,6 @@ add_executable(
     point_interpretation 
     src/point_interpretation.cpp
     src/Client.cpp
-    src/Image.cpp
 )
 
 target_link_libraries (point_interpretation ${OpenCV_LIBS} Eigen3::Eigen    )

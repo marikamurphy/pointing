@@ -15,6 +15,7 @@
 #define PORT 3211 
 #define IP "127.0.0.1"
 #define ARRLEN 256
+#define LABELLEN 1024
 
 using namespace std;
 using namespace Eigen;
@@ -23,6 +24,39 @@ using namespace cv;
 
 Client::Client(){
 
+}
+
+vector<Point> Client::getBoxes(){
+    return boxes;
+}
+vector<string> Client::getLabels(){
+    return labels;
+}
+
+void Client::sendImage(std::string img_path){
+    Mat image = loadImage(img_path);
+    int sockfd = connection();
+    sendCV(sockfd, image);
+}
+
+void Client::sendImage(Mat image){
+    int sockfd = connection();
+    sendCV(sockfd, image);
+}
+
+Mat Client::loadImage(std::string img_path){
+    Mat image;
+    image = imread(img_path);   // Read the file
+    if(! image.data )                              // Check for invalid input
+    {
+        std::cout <<  "Could not open or find the image" << std::endl ;
+        return image;
+    }
+    //namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+    //imshow( "Display window", image );                   // Show our image inside it.
+
+    //waitKey(0);
+    return image;     
 }
 
 int Client::connection(){
@@ -65,23 +99,20 @@ int Client::connection(){
 } 
 
 
-vector<Point> Client::sendCV(int sockfd, cv::Mat src)
+void Client::sendCV(int sockfd, cv::Mat src)
 {
     vector<uchar> buf;
-    vector<Point> nullp;
     cv::imencode(".jpg", src, buf);
     // Send size first
     int len = buf.size();
     if (write(sockfd, &len, sizeof(len)) < 0)
     {
         perror("ERROR writing to socket");
-        return nullp;
     }
     cout << "sent size" << endl;
     if (write(sockfd, buf.data(), buf.size()) < 0)
     {
         perror("ERROR writing to socket");
-        return nullp;
     }
     cout << "sent data" << endl;
     
@@ -91,10 +122,19 @@ vector<Point> Client::sendCV(int sockfd, cv::Mat src)
     if (read(sockfd, buffer, sizeof(buffer)) < 0)
     {
         perror("ERROR reading from socket");
-        return nullp;
     }
-    printf("%s\n", buffer); //TODO: we will recieve coordinates back, need to actually read these in
-    return interpretBuf(buffer);
+    printf("%s\n", buffer);
+
+    char labelBuf[LABELLEN];
+    bzero(labelBuf, LABELLEN);
+    if (read(sockfd, labelBuf, sizeof(labelBuf)) < 0)
+    {
+        perror("ERROR reading from socket");
+    }
+    printf("%s\n", labelBuf);
+
+    boxes = interpretBuf(buffer);
+    labels = interpretLabels(labelBuf);
 }
 
 //Here we place the coordinates into a MatrixXd
@@ -123,4 +163,25 @@ vector<Point> Client::interpretBuf(char buf[ARRLEN]){
         boxDict.push_back (pnt);
     }
     return boxDict;
+}
+
+//Here we place the coordinates into a MatrixXd
+vector<string> Client::interpretLabels(char buf[LABELLEN]){
+    
+    vector<string> arr;
+    int i = 1;
+    while(buf[i] != ']'){
+        std::string label ="";
+        while(buf[i] != ',' && buf[i] != ']'){
+            label.push_back(buf[i]);
+            i++;
+        }
+        if(buf[i] == ',')
+            i++;
+        
+        arr.push_back(label);
+    }
+    
+    
+    return arr;
 }

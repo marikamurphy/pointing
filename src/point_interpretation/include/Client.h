@@ -12,13 +12,21 @@ using namespace std;
 
 class Client {
     public:
-        Client ();
+        Client();
+        vector<Point> getBoxes();
+        vector<string> getLabels();
+        void sendImage(std::string img_path);
+        void sendImage(Mat image);
+        Mat loadImage(std::string img_path);
         int connection();
-        vector<Point> sendCV(int sockfd, cv::Mat src);
+        void sendCV(int sockfd, cv::Mat src);
         vector<Point> interpretBuf(char *buf);
+        vector<string> interpretLabels(char *buf);
 
     private:
         cv::Mat _photo;
+        vector<Point> boxes;
+        vector<string> labels;
         
 
 };
