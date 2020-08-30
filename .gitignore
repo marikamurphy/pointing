@@ -12,3 +12,4 @@ pointing-env
 src/point_interpretation/Makefile
 other/objectDetection/__pycache__/
 src/gazebo_plugin/
+other/three_cups.bag
