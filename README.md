@@ -9,7 +9,7 @@ We use pytorch for object recognition.  To use the code you'll need to set up a 
 ### Building source code
 Go to [point_interpretation](https://github.com/marikamurphy/pointing/tree/master/src/point_interpretation) and create a directory called build.  cd into the build directory and run 
 > cmake ..  
- 
+
 After that you can run *make* in the build directory whenever you want to compile the program.
 
 ## Running the project
