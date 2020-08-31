@@ -15,8 +15,13 @@ class subscribe_to_kinect {
     private:
         cv::Mat depth_image;
         cv::Mat color_image;
+        ros::Publisher marker_pub;
 
     public:
+        SubscribeToKinect();
+        vector<cv::Mat> get_color_and_depth();
+        vector<double> camera_info_callback(const sensor_msgs::CameraInfo::ConstPtr &msg);
+        void logic(int argc, char **argv, bool FLAGS_disable_multi_thread);
 }
 
 #endif
