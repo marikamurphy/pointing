@@ -1,4 +1,5 @@
 #include <Client.h>
+#include <SubscribeToKinect.h>
 #include <vector>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/highgui/highgui.hpp>
